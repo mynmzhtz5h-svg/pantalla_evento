@@ -4,33 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pantalla evento</title>
+
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: system-ui, sans-serif;
-    overflow: hidden;
-  }
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
 
-  #branding { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; transition: all 0.6s ease; }
-  #branding img { width: 50vw; max-width: 420px; transition: opacity 1.2s ease-in-out; }
-  #branding.mini img { width: 160px; }
+#branding {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: all 0.6s ease;
+}
+#branding img { width: 50vw; max-width: 420px; transition: opacity 1.2s ease-in-out; }
+#branding.mini img { width: 160px; }
 
-  #inicio { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; text-align: center; }
-  #inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; transition: transform 1.2s ease-in-out; }
+#inicio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+#inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; transition: transform 1.2s ease-in-out; }
 
-  .slide { position: absolute; inset: 0; object-fit: contain; width: 100%; height: 100%; opacity: 0; transition: opacity 1s; }
-  .slide.activa { opacity: 1; }
+.slide {
+  position: absolute;
+  inset: 0;
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s;
+}
+.slide.activa { opacity: 1; }
 
-  #qr-mini { position: absolute; bottom: 20px; right: 20px; width: 120px; background: white; padding: 10px; border-radius: 12px; display: none; z-index: 9; }
+#qr-mini {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 120px;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  display: none;
+  z-index: 9;
+}
 
-  #texto { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 14px; font-size: 22px; display: none; text-align: center; }
+#texto {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 22px;
+  display: none;
+  text-align: center;
+}
 
-  #escenario { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 1; }
-  #escenario img.slide { max-width: 90vw; max-height: 80vh; object-fit: contain; opacity: 0; transition: opacity 1s ease-in-out; }
-  #escenario img.slide.activa { opacity: 1; }
+#escenario {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
 
+#escenario img.slide {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+#escenario img.slide.activa {
+  opacity: 1;
+}
 </style>
 </head>
 <body>
@@ -49,24 +110,30 @@
 <div id="escenario"></div>
 
 <script>
-const backendURL = "https://backend-fotos-evento.vercel.app/api/fotos";
+const cloudName = "craneosuy"; // tu Cloudinary
+const folderName = "evento-qr"; // folder donde suben las fotos
 let fotos = [];
 let i = 0;
 let animInterval;
 
-// **Carga las fotos desde Vercel**
+// **Cargar fotos desde Cloudinary**
 async function cargarFotos() {
   try {
-    const res = await fetch(backendURL);
+    const url = `https://res.cloudinary.com/${cloudName}/image/list/${folderName}.json`;
+    const res = await fetch(url);
     const data = await res.json();
-    fotos = Array.isArray(data) ? data : [];
-  } catch (err) {
+    // data.resources es un array de objetos {public_id, format, version, ...}
+    fotos = data.resources.map(f => ({
+      secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${f.public_id}.${f.format}`,
+      public_id: f.public_id
+    }));
+  } catch(err) {
     console.error("Error cargando fotos:", err);
     fotos = [];
   }
 }
 
-// **Muestra una foto del carrusel**
+// **Mostrar una foto del carrusel**
 function mostrarFoto() {
   if (!fotos.length) return;
 
@@ -83,9 +150,9 @@ function mostrarFoto() {
   img.className = "slide activa";
   escenario.appendChild(img);
 
-  const partes = f.public_id.split("/")[1].split("___");
-  const nombre = partes[0]?.replace(/_/g, " ") || "";
-  const mensaje = partes[1]?.replace(/_/g, " ") || "";
+  const partes = f.public_id.split("/")[1]?.split("___") || [];
+  const nombre = partes[0]?.replace(/_/g," ") || "";
+  const mensaje = partes[1]?.replace(/_/g," ") || "";
 
   const texto = document.getElementById("texto");
   texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
@@ -98,7 +165,7 @@ function mostrarFoto() {
 async function loop() {
   await cargarFotos();
   if (fotos.length) {
-    clearInterval(animInterval); // Detener animación de QR/logo
+    clearInterval(animInterval); // detener animación QR/logo
     mostrarFoto();
   }
   setTimeout(loop, 5000);
@@ -124,5 +191,6 @@ function animarInicio() {
 animarInicio();
 loop();
 </script>
+
 </body>
 </html>
