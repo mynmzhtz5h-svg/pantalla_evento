@@ -14,11 +14,11 @@
   }
 
   #branding { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; transition: all 0.6s ease; }
-  #branding img { width: 50vw; max-width: 420px; }
+  #branding img { width: 50vw; max-width: 420px; transition: opacity 1.2s ease-in-out; }
   #branding.mini img { width: 160px; }
 
   #inicio { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; text-align: center; }
-  #inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; }
+  #inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; transition: transform 1.2s ease-in-out; }
 
   .slide { position: absolute; inset: 0; object-fit: contain; width: 100%; height: 100%; opacity: 0; transition: opacity 1s; }
   .slide.activa { opacity: 1; }
@@ -30,6 +30,7 @@
   #escenario { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 1; }
   #escenario img.slide { max-width: 90vw; max-height: 80vh; object-fit: contain; opacity: 0; transition: opacity 1s ease-in-out; }
   #escenario img.slide.activa { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -39,12 +40,11 @@
 </div>
 
 <div id="inicio">
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+  <img id="qr-inicio" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
   <p>Escaneá el QR y subí tu foto</p>
 </div>
 
 <img id="qr-mini" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-
 <div id="texto"></div>
 <div id="escenario"></div>
 
@@ -52,7 +52,77 @@
 const backendURL = "https://backend-fotos-evento.vercel.app/api/fotos";
 let fotos = [];
 let i = 0;
+let animInterval;
 
+// **Carga las fotos desde Vercel**
 async function cargarFotos() {
   try {
-    const res = await fet
+    const res = await fetch(backendURL);
+    const data = await res.json();
+    fotos = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error("Error cargando fotos:", err);
+    fotos = [];
+  }
+}
+
+// **Muestra una foto del carrusel**
+function mostrarFoto() {
+  if (!fotos.length) return;
+
+  document.getElementById("inicio").style.display = "none";
+  document.getElementById("qr-mini").style.display = "block";
+  document.getElementById("branding").classList.add("mini");
+
+  const escenario = document.getElementById("escenario");
+  escenario.innerHTML = "";
+
+  const f = fotos[i];
+  const img = document.createElement("img");
+  img.src = f.secure_url;
+  img.className = "slide activa";
+  escenario.appendChild(img);
+
+  const partes = f.public_id.split("/")[1].split("___");
+  const nombre = partes[0]?.replace(/_/g, " ") || "";
+  const mensaje = partes[1]?.replace(/_/g, " ") || "";
+
+  const texto = document.getElementById("texto");
+  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  texto.style.display = "block";
+
+  i = (i + 1) % fotos.length;
+}
+
+// **Loop de fotos cada 5s**
+async function loop() {
+  await cargarFotos();
+  if (fotos.length) {
+    clearInterval(animInterval); // Detener animación de QR/logo
+    mostrarFoto();
+  }
+  setTimeout(loop, 5000);
+}
+
+// **Animación QR y logo mientras no hay fotos**
+function animarInicio() {
+  const qr = document.getElementById("qr-inicio");
+  const logo = document.querySelector("#branding img");
+  let grow = true;
+  animInterval = setInterval(() => {
+    if (grow) {
+      qr.style.transform = "scale(1.1)";
+      logo.style.opacity = "0.7";
+    } else {
+      qr.style.transform = "scale(1)";
+      logo.style.opacity = "1";
+    }
+    grow = !grow;
+  }, 1200);
+}
+
+animarInicio();
+loop();
+</script>
+</body>
+</html>
