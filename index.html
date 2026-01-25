@@ -3,134 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pantalla Evento</title>
+<title>Pantalla Evento Automática</title>
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: system-ui, sans-serif;
-    overflow: hidden;
-  }
-
-  #branding {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    transition: all .6s ease;
-  }
-  #branding img {
-    width: 50vw;
-    max-width: 420px;
-  }
-  #branding.mini img {
-    width: 160px;
-  }
-
-  #inicio {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-    text-align: center;
-    transition: opacity 0.8s;
-  }
-  #inicio img {
-    width: 260px;
-    background: white;
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  #qr-mini {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 120px;
-    background: white;
-    padding: 10px;
-    border-radius: 12px;
-    display: none;
-    z-index: 9;
-  }
-
-  #texto {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,.6);
-    padding: 12px 20px;
-    border-radius: 14px;
-    font-size: 22px;
-    display: none;
-    text-align: center;
-    transition: opacity 1s;
-  }
-
-  #escenario {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
-
-  #escenario img.slide {
-    max-width: 90vw;
-    max-height: 80vh;
-    object-fit: contain;
-    position: absolute;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-  }
-
-  #escenario img.slide.activa {
-    opacity: 1;
-  }
+body { margin:0; background:black; color:white; font-family:system-ui,sans-serif; overflow:hidden; }
+#branding{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10;transition:all .6s ease;}
+#branding img{width:50vw;max-width:420px;}
+#branding.mini img{width:160px;}
+#inicio{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:24px;text-align:center;transition:opacity .8s;}
+#inicio img{width:260px;background:white;padding:16px;border-radius:18px;}
+#qr-mini{position:absolute;bottom:20px;right:20px;width:120px;background:white;padding:10px;border-radius:12px;display:none;z-index:9;}
+#texto{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:12px 20px;border-radius:14px;font-size:22px;display:none;text-align:center;transition:opacity 1s;}
+#escenario{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;z-index:1;}
+#escenario img.slide{max-width:90vw;max-height:80vh;object-fit:contain;position:absolute;opacity:0;transition:opacity 1s ease-in-out;}
+#escenario img.slide.activa{opacity:1;}
 </style>
 </head>
 <body>
 
-<div id="branding">
-  <img src="logo.png">
-</div>
+<div id="branding"><img src="logo.png"></div>
 
 <div id="inicio">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
   <p>Escaneá el QR y subí tu foto</p>
 </div>
 
-<img id="qr-mini"
-src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+<img id="qr-mini" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
 
 <div id="texto"></div>
 <div id="escenario"></div>
 
 <script>
-const cloudName = "craneosuy";
-const folder = "evento-qr";
-const updateInterval = 30000; // refresco fotos nuevas cada 30s
-let fotos = [];
-let i = 0;
+const cloudName = "craneosuy";   // tu Cloudinary
+const folder = "evento-qr";       // carpeta de fotos
+const updateInterval = 30000;     // refresco fotos nuevas
+let fotos = [], i = 0;
 
-// Obtener fotos de Cloudinary
+// Cargar fotos desde Cloudinary
 async function cargarFotos() {
   try {
     const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`);
     const data = await res.json();
     fotos = data.resources
-      .sort((a,b) => b.created_at.localeCompare(a.created_at))
-      .map(item => ({
-        secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
-        nombre: item.public_id.split("___")[0]?.replace(/_/g," ") || "",
-        mensaje: item.public_id.split("___")[1]?.replace(/_/g," ") || ""
+      .sort((a,b)=>b.created_at.localeCompare(a.created_at))
+      .map(item=>({
+        secure_url:`https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
+        nombre:item.public_id.split("___")[0]?.replace(/_/g," ")||"",
+        mensaje:item.public_id.split("___")[1]?.replace(/_/g," ")||""
       }));
   } catch(err) {
     console.error("Error cargando fotos:", err);
@@ -138,50 +56,45 @@ async function cargarFotos() {
   }
 }
 
-// Mostrar la foto actual
+// Mostrar foto actual
 function mostrar() {
   if (!fotos.length) return;
 
-  // Ocultar pantalla inicial
   const inicio = document.getElementById("inicio");
-  inicio.style.opacity = 0;
-  setTimeout(() => inicio.style.display = "none", 800);
+  inicio.style.opacity=0;
+  setTimeout(()=>inicio.style.display="none",800);
 
-  // Mostrar QR mini y achicar logo
-  document.getElementById("qr-mini").style.display = "block";
+  document.getElementById("qr-mini").style.display="block";
   document.getElementById("branding").classList.add("mini");
 
   const escenario = document.getElementById("escenario");
-
-  // Limpiar fotos anteriores
-  escenario.innerHTML = "";
+  escenario.innerHTML="";
 
   const f = fotos[i];
-  const img = document.createElement("img");
-  img.src = f.secure_url;
-  img.className = "slide activa";
+  const img=document.createElement("img");
+  img.src=f.secure_url;
+  img.className="slide activa";
   escenario.appendChild(img);
 
-  // Mostrar texto
-  const texto = document.getElementById("texto");
-  texto.innerHTML = `<strong>${f.nombre}</strong><br>${f.mensaje}`;
-  texto.style.display = "block";
-  texto.style.opacity = 1;
+  const texto=document.getElementById("texto");
+  texto.innerHTML=`<strong>${f.nombre}</strong><br>${f.mensaje}`;
+  texto.style.display="block";
+  texto.style.opacity=1;
 
-  i = (i + 1) % fotos.length;
+  i=(i+1)%fotos.length;
 }
 
-// Carrusel automático
-async function loop() {
+// Loop carrusel
+async function loop(){
   await cargarFotos();
   mostrar();
-  setTimeout(loop, 5000);
+  setTimeout(loop,5000);
 }
 
-// Refrescar fotos nuevas cada 30s
-setInterval(cargarFotos, updateInterval);
+// Refrescar fotos nuevas
+setInterval(cargarFotos,updateInterval);
 
-// Iniciar loop
+// Inicia carrusel
 loop();
 </script>
 
