@@ -13,101 +13,23 @@
     overflow: hidden;
   }
 
-  #branding {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    transition: all 0.6s ease;
-  }
+  #branding { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; transition: all 0.6s ease; }
+  #branding img { width: 50vw; max-width: 420px; }
+  #branding.mini img { width: 160px; }
 
-  #branding img {
-    width: 50vw;
-    max-width: 420px;
-  }
+  #inicio { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; text-align: center; }
+  #inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; }
 
-  #branding.mini img {
-    width: 160px;
-  }
+  .slide { position: absolute; inset: 0; object-fit: contain; width: 100%; height: 100%; opacity: 0; transition: opacity 1s; }
+  .slide.activa { opacity: 1; }
 
-  #inicio {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-    text-align: center;
-  }
+  #qr-mini { position: absolute; bottom: 20px; right: 20px; width: 120px; background: white; padding: 10px; border-radius: 12px; display: none; z-index: 9; }
 
-  #inicio img {
-    width: 260px;
-    background: white;
-    padding: 16px;
-    border-radius: 18px;
-  }
+  #texto { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 14px; font-size: 22px; display: none; text-align: center; }
 
-  .slide {
-    position: absolute;
-    inset: 0;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    transition: opacity 1s;
-  }
-
-  .slide.activa {
-    opacity: 1;
-  }
-
-  #qr-mini {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 120px;
-    background: white;
-    padding: 10px;
-    border-radius: 12px;
-    display: none;
-    z-index: 9;
-  }
-
-  #texto {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
-    padding: 12px 20px;
-    border-radius: 14px;
-    font-size: 22px;
-    display: none;
-    text-align: center;
-  }
-
-  #escenario {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
-
-  #escenario img.slide {
-    max-width: 90vw;
-    max-height: 80vh;
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-  }
-
-  #escenario img.slide.activa {
-    opacity: 1;
-  }
+  #escenario { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 1; }
+  #escenario img.slide { max-width: 90vw; max-height: 80vh; object-fit: contain; opacity: 0; transition: opacity 1s ease-in-out; }
+  #escenario img.slide.activa { opacity: 1; }
 </style>
 </head>
 <body>
@@ -131,60 +53,6 @@ const backendURL = "https://backend-fotos-evento.vercel.app/api/fotos";
 let fotos = [];
 let i = 0;
 
-// Cargar fotos desde Vercel
 async function cargarFotos() {
   try {
-    const res = await fetch(backendURL);
-    const data = await res.json();
-    fotos = Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error("Error cargando fotos:", err);
-    fotos = [];
-  }
-}
-
-// Mostrar una foto en el carrusel
-function mostrarFoto() {
-  if (!fotos.length) return;
-
-  // Ocultar inicio y mostrar mini QR + logo mini
-  document.getElementById("inicio").style.display = "none";
-  document.getElementById("qr-mini").style.display = "block";
-  document.getElementById("branding").classList.add("mini");
-
-  // Limpiar slides previas
-  const escenario = document.getElementById("escenario");
-  escenario.innerHTML = "";
-
-  const f = fotos[i];
-  const img = document.createElement("img");
-  img.src = f.secure_url;
-  img.className = "slide activa";
-  escenario.appendChild(img);
-
-  // Texto debajo de la foto
-  const partes = f.public_id.split("/")[1].split("___");
-  const nombre = partes[0]?.replace(/_/g, " ") || "";
-  const mensaje = partes[1]?.replace(/_/g, " ") || "";
-
-  const texto = document.getElementById("texto");
-  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
-  texto.style.display = "block";
-
-  // Pasar a la siguiente foto
-  i = (i + 1) % fotos.length;
-}
-
-// Loop automático cada 5 segundos
-async function loop() {
-  await cargarFotos();
-  mostrarFoto();
-  setTimeout(loop, 5000);
-}
-
-// Iniciar carrusel
-loop();
-</script>
-
-</body>
-</html>
+    const res = await fet
