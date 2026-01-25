@@ -7,142 +7,196 @@
 <style>
   body {
     margin: 0;
-    min-height: 100vh;
-    background: linear-gradient(160deg, #0a0a0a, #111);
-    font-family: system-ui, sans-serif;
+    background: black;
     color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    font-family: system-ui, sans-serif;
     overflow: hidden;
   }
 
-  .logo {
+  /* Logo */
+  #branding {
     position: absolute;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    max-width: 200px;
-    transition: all 0.5s;
+    z-index: 10;
+    transition: all .6s ease;
+  }
+  #branding img {
+    width: 50vw;
+    max-width: 420px;
+  }
+  #branding.mini img {
+    width: 160px;
   }
 
-  #qrContainer {
-    margin-top: 100px;
-    transition: all 0.5s;
-  }
-
-  #qrContainer img {
-    width: 250px;
-    height: 250px;
-  }
-
-  #photoContainer {
+  /* Pantalla inicial con QR gigante */
+  #inicio {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    margin-top: 20px;
-  }
-
-  #photoContainer img {
-    max-width: 90vw;
-    max-height: 70vh;
-    border-radius: 15px;
-    margin-bottom: 10px;
-    display: none;
-    object-fit: contain;
-    transition: opacity 0.5s;
-  }
-
-  #photoText {
-    font-size: 1.5rem;
+    gap: 24px;
     text-align: center;
-    opacity: 0.9;
+    transition: opacity 0.8s;
+  }
+  #inicio img {
+    width: 260px;
+    background: white;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  /* QR mini al fondo */
+  #qr-mini {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    display: none;
+    z-index: 9;
+  }
+
+  /* Texto con nombre y mensaje */
+  #texto {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.6);
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 22px;
+    display: none;
+    text-align: center;
+    transition: opacity 1s;
+  }
+
+  /* Escenario de fotos */
+  #escenario {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1; /* detrás de branding, QR y texto */
+  }
+  #escenario img.slide {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    position: absolute;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+  #escenario img.slide.activa {
+    opacity: 1;
   }
 </style>
 </head>
 <body>
 
 <!-- Logo -->
-<img src="logo.png" class="logo" id="logo">
-
-<!-- QR inicial apuntando a la página de subida -->
-<div id="qrContainer">
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" alt="QR Subida">
+<div id="branding">
+  <img src="logo.png">
 </div>
 
-<!-- Contenedor de foto y texto -->
-<div id="photoContainer">
-  <img id="photo" src="">
-  <div id="photoText"></div>
+<!-- Pantalla inicial con QR gigante -->
+<div id="inicio">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+  <p>Escaneá el QR y subí tu foto</p>
 </div>
+
+<!-- QR mini que aparece al iniciar carrusel -->
+<img id="qr-mini"
+src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+
+<!-- Texto de nombre y mensaje -->
+<div id="texto"></div>
+
+<!-- Contenedor de fotos -->
+<div id="escenario"></div>
 
 <script>
-const cloudName = "craneosuy"; // tu Cloudinary
-const folder = "evento-qr";     // carpeta donde suben las fotos
-const maxPhotos = 50;           // cuántas fotos traer como máximo
+const cloudName = "craneosuy";  // tu Cloudinary
+const folder = "evento-qr";      // carpeta donde se suben las fotos
+const updateInterval = 30000;     // refresco fotos nuevas cada 30s
+let fotos = [];
+let i = 0;
 
-const qrContainer = document.getElementById("qrContainer");
-const logo = document.getElementById("logo");
-const photo = document.getElementById("photo");
-const photoText = document.getElementById("photoText");
-
-let photos = [];
-let currentIndex = 0;
-
-// Función para obtener fotos de Cloudinary
-async function fetchPhotos() {
+// Traer fotos de Cloudinary
+async function cargarFotos() {
   try {
-    const url = `https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`;
-    const res = await fetch(url);
+    const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`);
     const data = await res.json();
-    photos = data.resources
-      .sort((a, b) => b.created_at.localeCompare(a.created_at)) // las más nuevas primero
-      .slice(0, maxPhotos)
+    fotos = data.resources
+      .sort((a,b) => b.created_at.localeCompare(a.created_at))
       .map(item => ({
-        url: `https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
-        text: item.public_id.replace(/___/g, " - ")
+        secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
+        public_id: item.public_id
       }));
-
-    if (photos.length > 0) startCarousel();
-  } catch (err) {
+  } catch(err) {
     console.error("Error cargando fotos:", err);
+    fotos = [];
   }
 }
 
-// Función para mostrar foto
-function showPhoto(index) {
-  if (photos.length === 0) return;
+// Mostrar foto con fade
+function mostrar() {
+  if (!fotos.length) return;
 
-  const item = photos[index];
-  photo.style.opacity = 0; // efecto fade out
-  setTimeout(() => {
-    photo.src = item.url;
-    photoText.textContent = item.text;
-    photo.style.display = "block";
-    photo.style.opacity = 1; // fade in
-  }, 300);
+  // Ocultar pantalla inicial
+  const inicio = document.getElementById("inicio");
+  inicio.style.opacity = 0;
+  setTimeout(() => inicio.style.display = "none", 800);
 
-  // QR se achica y logo sube
-  qrContainer.style.marginTop = "20px";
-  qrContainer.querySelector("img").style.width = "150px";
-  qrContainer.querySelector("img").style.height = "150px";
+  // Mostrar QR mini y achicar logo
+  const qrMini = document.getElementById("qr-mini");
+  qrMini.style.display = "block";
+  document.getElementById("branding").classList.add("mini");
+
+  // Escenario
+  const escenario = document.getElementById("escenario");
+
+  // Quitar slides anteriores
+  document.querySelectorAll("#escenario img.slide").forEach(e => e.remove());
+
+  const f = fotos[i];
+  const img = document.createElement("img");
+  img.src = f.secure_url;
+  img.className = "slide activa";
+  escenario.appendChild(img);
+
+  // Extraer nombre y mensaje del public_id
+  const partes = f.public_id.split("/")[1]?.split("___");
+  const nombre = partes?.[0]?.replace(/_/g," ") || "";
+  const mensaje = partes?.[1]?.replace(/_/g," ") || "";
+
+  const texto = document.getElementById("texto");
+  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  texto.style.display = "block";
+  texto.style.opacity = 1;
+
+  i = (i + 1) % fotos.length;
 }
 
-// Carrusel automático
-function startCarousel() {
-  if (photos.length === 0) return;
-
-  showPhoto(currentIndex);
-  setInterval(() => {
-    currentIndex = (currentIndex + 1) % photos.length;
-    showPhoto(currentIndex);
-  }, 5000);
+// Carrusel automático cada 5s
+async function loop() {
+  await cargarFotos();
+  mostrar();
+  setTimeout(loop, 5000);
 }
 
-// Actualiza fotos automáticamente cada 30 segundos
-setInterval(fetchPhotos, 30000);
-fetchPhotos(); // primera carga
+// Refrescar fotos nuevas cada 30s
+setInterval(cargarFotos, updateInterval);
+
+// Inicia el loop
+loop();
 </script>
 
 </body>
