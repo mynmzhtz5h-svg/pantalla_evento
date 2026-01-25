@@ -33,12 +33,12 @@ body { margin:0; background:black; color:white; font-family:system-ui,sans-serif
 <div id="escenario"></div>
 
 <script>
-const cloudName = "craneosuy";   // tu Cloudinary
-const folder = "evento-qr";       // carpeta de fotos
-const updateInterval = 30000;     // refresco fotos nuevas
+const cloudName = "craneosuy";     // tu Cloudinary
+const folder = "evento-qr";         // carpeta donde suben fotos
+const updateInterval = 30000;       // refresco fotos cada 30s
 let fotos = [], i = 0;
 
-// Cargar fotos desde Cloudinary
+// Función para cargar fotos desde Cloudinary (unsigned)
 async function cargarFotos() {
   try {
     const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`);
@@ -56,7 +56,7 @@ async function cargarFotos() {
   }
 }
 
-// Mostrar foto actual
+// Mostrar la foto actual en el carrusel
 function mostrar() {
   if (!fotos.length) return;
 
@@ -71,30 +71,30 @@ function mostrar() {
   escenario.innerHTML="";
 
   const f = fotos[i];
-  const img=document.createElement("img");
-  img.src=f.secure_url;
+  const img = document.createElement("img");
+  img.src = f.secure_url;
   img.className="slide activa";
   escenario.appendChild(img);
 
-  const texto=document.getElementById("texto");
+  const texto = document.getElementById("texto");
   texto.innerHTML=`<strong>${f.nombre}</strong><br>${f.mensaje}`;
   texto.style.display="block";
   texto.style.opacity=1;
 
-  i=(i+1)%fotos.length;
+  i = (i+1) % fotos.length;
 }
 
-// Loop carrusel
+// Loop carrusel cada 5s
 async function loop(){
   await cargarFotos();
   mostrar();
   setTimeout(loop,5000);
 }
 
-// Refrescar fotos nuevas
-setInterval(cargarFotos,updateInterval);
+// Refrescar fotos nuevas cada 30s
+setInterval(cargarFotos, updateInterval);
 
-// Inicia carrusel
+// Iniciar carrusel
 loop();
 </script>
 
