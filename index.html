@@ -3,193 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pantalla evento</title>
-
+<title>Test Carrusel Cloudinary</title>
 <style>
-body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
-}
+  body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: system-ui, sans-serif;
+    color: white;
+  }
 
-#branding {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  transition: all 0.6s ease;
-}
-#branding img { width: 50vw; max-width: 420px; transition: opacity 1.2s ease-in-out; }
-#branding.mini img { width: 160px; }
+  #escenario {
+    position: relative;
+    width: 90vw;
+    height: 80vh;
+  }
 
-#inicio {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  text-align: center;
-}
-#inicio img { width: 260px; background: white; padding: 16px; border-radius: 18px; transition: transform 1.2s ease-in-out; }
+  #escenario img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
 
-.slide {
-  position: absolute;
-  inset: 0;
-  object-fit: contain;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 1s;
-}
-.slide.activa { opacity: 1; }
-
-#qr-mini {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 120px;
-  background: white;
-  padding: 10px;
-  border-radius: 12px;
-  display: none;
-  z-index: 9;
-}
-
-#texto {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.6);
-  padding: 12px 20px;
-  border-radius: 14px;
-  font-size: 22px;
-  display: none;
-  text-align: center;
-}
-
-#escenario {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1;
-}
-
-#escenario img.slide {
-  max-width: 90vw;
-  max-height: 80vh;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
-}
-#escenario img.slide.activa {
-  opacity: 1;
-}
+  #escenario img.activa {
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
 
-<div id="branding">
-  <img src="logo.png" alt="Logo">
-</div>
-
-<div id="inicio">
-  <img id="qr-inicio" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-  <p>Escaneá el QR y subí tu foto</p>
-</div>
-
-<img id="qr-mini" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-<div id="texto"></div>
 <div id="escenario"></div>
 
 <script>
-const cloudName = "craneosuy"; // tu Cloudinary
-const folderName = "evento-qr"; // folder donde suben las fotos
+const cloudName = "craneosuy";
+const folder = "evento-qr";
 let fotos = [];
 let i = 0;
-let animInterval;
 
-// **Cargar fotos desde Cloudinary**
 async function cargarFotos() {
   try {
-    const url = `https://res.cloudinary.com/${cloudName}/image/list/${folderName}.json`;
+    // URL del JSON de Cloudinary
+    const url = `https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`;
     const res = await fetch(url);
+    if (!res.ok) throw new Error("No se pudo obtener las fotos");
     const data = await res.json();
-    // data.resources es un array de objetos {public_id, format, version, ...}
+
     fotos = data.resources.map(f => ({
-      secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${f.public_id}.${f.format}`,
-      public_id: f.public_id
+      url: `https://res.cloudinary.com/${cloudName}/image/upload/${f.public_id}.${f.format}`,
+      nombre: f.public_id
     }));
+
+    console.log("Fotos cargadas:", fotos);
   } catch(err) {
     console.error("Error cargando fotos:", err);
-    fotos = [];
   }
 }
 
-// **Mostrar una foto del carrusel**
 function mostrarFoto() {
   if (!fotos.length) return;
 
-  document.getElementById("inicio").style.display = "none";
-  document.getElementById("qr-mini").style.display = "block";
-  document.getElementById("branding").classList.add("mini");
-
   const escenario = document.getElementById("escenario");
+
+  // Limpiar fotos anteriores
   escenario.innerHTML = "";
 
-  const f = fotos[i];
+  // Crear imagen actual
   const img = document.createElement("img");
-  img.src = f.secure_url;
-  img.className = "slide activa";
+  img.src = fotos[i].url;
+  img.classList.add("activa");
   escenario.appendChild(img);
 
-  const partes = f.public_id.split("/")[1]?.split("___") || [];
-  const nombre = partes[0]?.replace(/_/g," ") || "";
-  const mensaje = partes[1]?.replace(/_/g," ") || "";
-
-  const texto = document.getElementById("texto");
-  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
-  texto.style.display = "block";
-
   i = (i + 1) % fotos.length;
+
+  // Cambiar cada 5 segundos
+  setTimeout(mostrarFoto, 5000);
 }
 
-// **Loop de fotos cada 5s**
-async function loop() {
+// Función principal
+async function iniciarCarrusel() {
   await cargarFotos();
-  if (fotos.length) {
-    clearInterval(animInterval); // detener animación QR/logo
-    mostrarFoto();
-  }
-  setTimeout(loop, 5000);
+  mostrarFoto();
 }
 
-// **Animación QR y logo mientras no hay fotos**
-function animarInicio() {
-  const qr = document.getElementById("qr-inicio");
-  const logo = document.querySelector("#branding img");
-  let grow = true;
-  animInterval = setInterval(() => {
-    if (grow) {
-      qr.style.transform = "scale(1.1)";
-      logo.style.opacity = "0.7";
-    } else {
-      qr.style.transform = "scale(1)";
-      logo.style.opacity = "1";
-    }
-    grow = !grow;
-  }, 1200);
-}
-
-animarInicio();
-loop();
+iniciarCarrusel();
 </script>
 
 </body>
