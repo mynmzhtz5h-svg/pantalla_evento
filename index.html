@@ -13,7 +13,6 @@
     overflow: hidden;
   }
 
-  /* Logo */
   #branding {
     position: absolute;
     top: 20px;
@@ -30,7 +29,6 @@
     width: 160px;
   }
 
-  /* Pantalla inicial con QR gigante */
   #inicio {
     position: absolute;
     inset: 0;
@@ -49,7 +47,6 @@
     border-radius: 18px;
   }
 
-  /* QR mini al fondo */
   #qr-mini {
     position: absolute;
     bottom: 20px;
@@ -62,7 +59,6 @@
     z-index: 9;
   }
 
-  /* Texto con nombre y mensaje */
   #texto {
     position: absolute;
     bottom: 80px;
@@ -77,15 +73,15 @@
     transition: opacity 1s;
   }
 
-  /* Escenario de fotos */
   #escenario {
     position: absolute;
     inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1; /* detrás de branding, QR y texto */
+    z-index: 1;
   }
+
   #escenario img.slide {
     max-width: 90vw;
     max-height: 80vh;
@@ -94,6 +90,7 @@
     opacity: 0;
     transition: opacity 1s ease-in-out;
   }
+
   #escenario img.slide.activa {
     opacity: 1;
   }
@@ -101,35 +98,29 @@
 </head>
 <body>
 
-<!-- Logo -->
 <div id="branding">
   <img src="logo.png">
 </div>
 
-<!-- Pantalla inicial con QR gigante -->
 <div id="inicio">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
   <p>Escaneá el QR y subí tu foto</p>
 </div>
 
-<!-- QR mini que aparece al iniciar carrusel -->
 <img id="qr-mini"
 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
 
-<!-- Texto de nombre y mensaje -->
 <div id="texto"></div>
-
-<!-- Contenedor de fotos -->
 <div id="escenario"></div>
 
 <script>
-const cloudName = "craneosuy";  // tu Cloudinary
-const folder = "evento-qr";      // carpeta donde se suben las fotos
-const updateInterval = 30000;     // refresco fotos nuevas cada 30s
+const cloudName = "craneosuy";
+const folder = "evento-qr";
+const updateInterval = 30000; // refresco fotos nuevas cada 30s
 let fotos = [];
 let i = 0;
 
-// Traer fotos de Cloudinary
+// Obtener fotos de Cloudinary
 async function cargarFotos() {
   try {
     const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`);
@@ -138,7 +129,8 @@ async function cargarFotos() {
       .sort((a,b) => b.created_at.localeCompare(a.created_at))
       .map(item => ({
         secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
-        public_id: item.public_id
+        nombre: item.public_id.split("___")[0]?.replace(/_/g," ") || "",
+        mensaje: item.public_id.split("___")[1]?.replace(/_/g," ") || ""
       }));
   } catch(err) {
     console.error("Error cargando fotos:", err);
@@ -146,7 +138,7 @@ async function cargarFotos() {
   }
 }
 
-// Mostrar foto con fade
+// Mostrar la foto actual
 function mostrar() {
   if (!fotos.length) return;
 
@@ -156,15 +148,13 @@ function mostrar() {
   setTimeout(() => inicio.style.display = "none", 800);
 
   // Mostrar QR mini y achicar logo
-  const qrMini = document.getElementById("qr-mini");
-  qrMini.style.display = "block";
+  document.getElementById("qr-mini").style.display = "block";
   document.getElementById("branding").classList.add("mini");
 
-  // Escenario
   const escenario = document.getElementById("escenario");
 
-  // Quitar slides anteriores
-  document.querySelectorAll("#escenario img.slide").forEach(e => e.remove());
+  // Limpiar fotos anteriores
+  escenario.innerHTML = "";
 
   const f = fotos[i];
   const img = document.createElement("img");
@@ -172,20 +162,16 @@ function mostrar() {
   img.className = "slide activa";
   escenario.appendChild(img);
 
-  // Extraer nombre y mensaje del public_id
-  const partes = f.public_id.split("/")[1]?.split("___");
-  const nombre = partes?.[0]?.replace(/_/g," ") || "";
-  const mensaje = partes?.[1]?.replace(/_/g," ") || "";
-
+  // Mostrar texto
   const texto = document.getElementById("texto");
-  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  texto.innerHTML = `<strong>${f.nombre}</strong><br>${f.mensaje}`;
   texto.style.display = "block";
   texto.style.opacity = 1;
 
   i = (i + 1) % fotos.length;
 }
 
-// Carrusel automático cada 5s
+// Carrusel automático
 async function loop() {
   await cargarFotos();
   mostrar();
@@ -195,7 +181,7 @@ async function loop() {
 // Refrescar fotos nuevas cada 30s
 setInterval(cargarFotos, updateInterval);
 
-// Inicia el loop
+// Iniciar loop
 loop();
 </script>
 
