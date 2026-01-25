@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pantalla Evento</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #0a0a0a, #111);
+    font-family: system-ui, sans-serif;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .logo {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 200px;
+    transition: all 0.5s;
+  }
+
+  #qrContainer {
+    margin-top: 100px;
+    transition: all 0.5s;
+  }
+
+  #qrContainer img {
+    width: 250px;
+    height: 250px;
+  }
+
+  #photoContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  #photoContainer img {
+    max-width: 90vw;
+    max-height: 70vh;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    display: none;
+    object-fit: contain;
+    transition: opacity 0.5s;
+  }
+
+  #photoText {
+    font-size: 1.5rem;
+    text-align: center;
+    opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+
+<!-- Logo -->
+<img src="logo.png" class="logo" id="logo">
+
+<!-- QR inicial apuntando a la página de subida -->
+<div id="qrContainer">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" alt="QR Subida">
+</div>
+
+<!-- Contenedor de foto y texto -->
+<div id="photoContainer">
+  <img id="photo" src="">
+  <div id="photoText"></div>
+</div>
+
+<script>
+const cloudName = "craneosuy"; // tu Cloudinary
+const folder = "evento-qr";     // carpeta donde suben las fotos
+const maxPhotos = 50;           // cuántas fotos traer como máximo
+
+const qrContainer = document.getElementById("qrContainer");
+const logo = document.getElementById("logo");
+const photo = document.getElementById("photo");
+const photoText = document.getElementById("photoText");
+
+let photos = [];
+let currentIndex = 0;
+
+// Función para obtener fotos de Cloudinary
+async function fetchPhotos() {
+  try {
+    const url = `https://res.cloudinary.com/${cloudName}/image/list/${folder}.json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    photos = data.resources
+      .sort((a, b) => b.created_at.localeCompare(a.created_at)) // las más nuevas primero
+      .slice(0, maxPhotos)
+      .map(item => ({
+        url: `https://res.cloudinary.com/${cloudName}/image/upload/${item.public_id}.${item.format}`,
+        text: item.public_id.replace(/___/g, " - ")
+      }));
+
+    if (photos.length > 0) startCarousel();
+  } catch (err) {
+    console.error("Error cargando fotos:", err);
+  }
+}
+
+// Función para mostrar foto
+function showPhoto(index) {
+  if (photos.length === 0) return;
+
+  const item = photos[index];
+  photo.style.opacity = 0; // efecto fade out
+  setTimeout(() => {
+    photo.src = item.url;
+    photoText.textContent = item.text;
+    photo.style.display = "block";
+    photo.style.opacity = 1; // fade in
+  }, 300);
+
+  // QR se achica y logo sube
+  qrContainer.style.marginTop = "20px";
+  qrContainer.querySelector("img").style.width = "150px";
+  qrContainer.querySelector("img").style.height = "150px";
+}
+
+// Carrusel automático
+function startCarousel() {
+  if (photos.length === 0) return;
+
+  showPhoto(currentIndex);
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % photos.length;
+    showPhoto(currentIndex);
+  }, 5000);
+}
+
+// Actualiza fotos automáticamente cada 30 segundos
+setInterval(fetchPhotos, 30000);
+fetchPhotos(); // primera carga
+</script>
+
+</body>
+</html>
