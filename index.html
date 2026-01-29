@@ -6,105 +6,141 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  margin:0;
-  background:radial-gradient(circle at top,#111,#000);
-  color:#fff;
-  font-family:system-ui,sans-serif;
-  overflow:hidden;
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #222 0%, #000 70%);
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
 }
 
-#logo{
-  position:absolute;
-  top:20px;
-  left:50%;
-  transform:translateX(-50%);
-  width:200px;
-  z-index:10;
+/* CONTENEDOR GENERAL */
+#escenario {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-#contenedor{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* LOGO */
+#logo {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  z-index: 10;
 }
 
-#foto{
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  opacity:0;
-  transition:opacity 1s ease;
-  display:none; /* 🔑 CLAVE */
+/* QR */
+#qr {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 420px;
+  height: 420px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 0 60px rgba(0,0,0,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 1s ease;
+  z-index: 5;
 }
 
-#qrGrande{
-  width:420px;
-  opacity:0;
-  transition:opacity 1s ease;
+#qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-#qrMini{
-  position:absolute;
-  bottom:30px;
-  right:30px;
-  width:140px;
-  opacity:0;
-  transition:opacity 1s ease;
+/* QR chico */
+#qr.chico {
+  width: 140px;
+  height: 140px;
+  bottom: 30px;
+  right: 30px;
+  top: auto;
+  left: auto;
+  margin: 0;
 }
 
-#textoQR{
-  position:absolute;
-  bottom:190px;
-  right:30px;
-  width:260px;
-  text-align:center;
-  font-size:18px;
-  font-weight:700;
-  opacity:0;
-  transition:opacity 1s ease;
+/* TEXTO QR */
+#qr-texto {
+  position: absolute;
+  bottom: 180px;
+  right: 30px;
+  font-size: 16px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 1s;
 }
 
-#info{
-  position:absolute;
-  left:40px;
-  max-width:420px;
-  padding:20px;
-  border-radius:16px;
-  background:linear-gradient(135deg,#00ffcc,#0066ff);
-  color:#000;
-  opacity:0;
-  transition:opacity 1s ease;
+#qr.chico + #qr-texto {
+  opacity: 1;
 }
 
-#nombre{
-  font-size:24px;
-  font-weight:800;
+/* CARRUSEL */
+#carrusel {
+  position: absolute;
+  inset: 0;
+  display: none;
 }
 
-#mensaje{
-  font-size:18px;
-  margin-top:8px;
+#foto {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: fade 1s ease;
+}
+
+/* INFO */
+#info {
+  position: absolute;
+  left: 40px;
+  bottom: 80px;
+  max-width: 40%;
+  padding: 24px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #00ffcc, #0066ff);
+  color: #000;
+  font-size: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.5);
+  animation: glow 6s infinite alternate;
+}
+
+/* ANIMACIONES */
+@keyframes fade {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes glow {
+  from { filter: hue-rotate(0deg) }
+  to { filter: hue-rotate(60deg) }
 }
 </style>
 </head>
 
 <body>
 
-<img id="logo" src="logo.png">
-<div id="contenedor">
-  <img id="foto">
-  <img id="qrGrande" src="qr.png">
-  <img id="qrMini" src="qr.png">
-</div>
+<div id="escenario">
 
-<div id="textoQR">SUBÍ TU FOTO Y SÉ PARTE DE LA FIESTA!</div>
+  <img id="logo" src="logo.png" alt="Logo">
 
-<div id="info">
-  <div id="nombre"></div>
-  <div id="mensaje"></div>
+  <div id="qr">
+    <img src="qr.png" alt="QR">
+  </div>
+  <div id="qr-texto">SUBÍ TU FOTO<br>Y SÉ PARTE DE LA FIESTA!</div>
+
+  <div id="carrusel">
+    <img id="foto">
+    <div id="info"></div>
+  </div>
+
 </div>
 
 <script type="module">
@@ -115,92 +151,50 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
-const foto = document.getElementById("foto");
-const qrGrande = document.getElementById("qrGrande");
-const qrMini = document.getElementById("qrMini");
-const textoQR = document.getElementById("textoQR");
-const info = document.getElementById("info");
-const nombreEl = document.getElementById("nombre");
-const mensajeEl = document.getElementById("mensaje");
-
+const DURACION = 8000;
 let fotos = [];
-let index = 0;
-let carruselActivo = false;
+let indice = 0;
 
-function mostrarQR() {
-  qrGrande.style.opacity = 1;
-  qrMini.style.opacity = 0;
-  textoQR.style.opacity = 0;
-  foto.style.opacity = 0;
-  foto.style.display = "none";
-  info.style.opacity = 0;
-}
-
-function iniciarCarrusel() {
-  carruselActivo = true;
-  qrGrande.style.opacity = 0;
-  qrMini.style.opacity = 1;
-  textoQR.style.opacity = 1;
-  foto.style.display = "block";
-  mostrarFoto();
-}
-
-function mostrarFoto() {
-  const f = fotos[index];
-  foto.src = f.url;
-  nombreEl.textContent = f.nombre || "";
-  mensajeEl.textContent = f.mensaje || "";
-  foto.style.opacity = 1;
-  info.style.opacity = 1;
-
-  setTimeout(() => {
-    foto.style.opacity = 0;
-    info.style.opacity = 0;
-    index++;
-
-    if (index >= fotos.length) {
-      carruselActivo = false;
-      index = 0;
-      mostrarQR();
-      setTimeout(() => {
-        if (fotos.length) iniciarCarrusel();
-      }, 10000);
-    } else {
-      setTimeout(mostrarFoto, 1000);
-    }
-  }, 8000);
-}
+const qr = document.getElementById("qr");
+const carrusel = document.getElementById("carrusel");
+const img = document.getElementById("foto");
+const info = document.getElementById("info");
 
 async function cargarFotos() {
   const { data } = await supabase.storage.from("evento").list("", { limit: 100 });
-
-  const validas = (data || []).filter(f =>
+  return (data || []).filter(f =>
     /\.(jpg|jpeg|png)$/i.test(f.name)
   );
+}
 
-  if (!validas.length) {
-    mostrarQR();
+async function iniciar() {
+  fotos = await cargarFotos();
+
+  if (!fotos.length) {
+    carrusel.style.display = "none";
+    qr.classList.remove("chico");
     return;
   }
 
-  fotos = validas.reverse().map(f => {
-    const p = f.name.split("___");
-    return {
-      url: supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl,
-      nombre: p[0]?.replace(/_/g," "),
-      mensaje: p[1]?.replace(/_/g," ")
-    };
-  });
-
-  if (!carruselActivo) {
-    mostrarQR();
-    setTimeout(iniciarCarrusel, 10000);
-  }
+  qr.classList.add("chico");
+  carrusel.style.display = "block";
+  mostrar();
 }
 
-mostrarQR();
-cargarFotos();
-setInterval(cargarFotos, 10000);
+function mostrar() {
+  const f = fotos[indice];
+  img.src = supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl;
+
+  const partes = f.name.split("___");
+  info.innerHTML = `<strong>${partes[0]}</strong><br>${(partes[1]||"").replace(/_/g," ")}`;
+
+  indice = (indice + 1) % fotos.length;
+
+  setTimeout(mostrar, DURACION);
+}
+
+setInterval(iniciar, 10000);
+iniciar();
 </script>
 
 </body>
