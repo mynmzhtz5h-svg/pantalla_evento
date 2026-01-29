@@ -2,119 +2,125 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pantalla Evento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: system-ui, sans-serif;
-    overflow: hidden;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+}
 
-  #branding {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    transition: all .6s ease;
-  }
+#escenario {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  #branding img {
-    width: 50vw;
-    max-width: 420px;
-  }
+.slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 1s ease, transform 1s ease;
+}
 
-  #branding.mini img {
-    width: 160px;
-  }
+.slide.activa {
+  opacity: 1;
+  transform: scale(1);
+}
 
-  #inicio {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-    text-align: center;
-  }
+#texto {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 28px;
+  color: #fff;
+  text-shadow: 0 2px 12px #000;
+  display: none;
+}
 
-  #inicio img {
-    width: 300px;
-    background: white;
-    padding: 18px;
-    border-radius: 22px;
-  }
+#inicio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  #qr-mini {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 120px;
-    background: white;
-    padding: 10px;
-    border-radius: 14px;
-    display: none;
-    z-index: 9;
-  }
+#qr-grande {
+  width: 360px;
+}
 
-  #escenario {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
+#branding {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
-  .slide {
-    max-width: 90vw;
-    max-height: 80vh;
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity 1s ease;
-    position: absolute;
-  }
+#branding img {
+  width: 180px;
+}
 
-  .slide.activa {
-    opacity: 1;
-  }
+#branding.mini {
+  top: auto;
+  bottom: 20px;
+  right: 20px;
+  left: auto;
+  transform: none;
+}
 
-  #texto {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,.6);
-    padding: 14px 24px;
-    border-radius: 16px;
-    font-size: 22px;
-    display: none;
-    text-align: center;
-    z-index: 5;
-  }
+#branding.mini img {
+  width: 120px;
+}
+
+#qr-mini {
+  display: none;
+}
+
+#qr-texto {
+  position: absolute;
+  bottom: 150px;
+  right: 20px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: right;
+  display: none;
+}
 </style>
 </head>
 
 <body>
 
+<div id="escenario"></div>
+
+<div id="inicio">
+  <img id="qr-grande" src="qr.png" alt="QR">
+</div>
+
 <div id="branding">
   <img src="logo.png" alt="Logo">
 </div>
 
-<div id="inicio">
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-  <p>Escaneá el QR y subí tu foto</p>
+<div id="qr-mini">
+  <img src="qr.png" width="140">
 </div>
 
-<img id="qr-mini"
-src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+<div id="qr-texto">📸 Escaneá y subí tu foto</div>
 
-<div id="escenario"></div>
 <div id="texto"></div>
 
 <script type="module">
@@ -125,63 +131,118 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
+const escenario = document.getElementById("escenario");
+const texto = document.getElementById("texto");
+const inicio = document.getElementById("inicio");
+const branding = document.getElementById("branding");
+const qrTexto = document.getElementById("qr-texto");
+
 let fotos = [];
 let indice = 0;
-let iniciado = false;
+let ultimaCantidad = 0;
+let mostrandoQR = true;
 
-async function cargarFotos() {
-  const { data, error } = await supabase
+// 🔍 Buscar fotos
+async function buscarFotos() {
+  const { data } = await supabase
     .storage
     .from("evento")
-    .list("", { limit: 100, sortBy: { column: "created_at", order: "asc" } });
+    .list("", {
+      limit: 100,
+      sortBy: { column: "created_at", order: "desc" }
+    });
 
-  if (error) return;
+  if (!data) return;
 
-  fotos = data.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i));
-}
+  const nuevas = data.filter(f =>
+    f.name.match(/\.(jpg|jpeg|png|webp)$/i)
+  );
 
-function mostrarFoto() {
-  if (!fotos.length) return;
-
-  if (!iniciado) {
-    document.getElementById("inicio").style.display = "none";
-    document.getElementById("qr-mini").style.display = "block";
-    document.getElementById("branding").classList.add("mini");
-    iniciado = true;
+  if (nuevas.length > ultimaCantidad) {
+    fotos = nuevas;
+    indice = 0;
   }
 
-  const escenario = document.getElementById("escenario");
+  ultimaCantidad = nuevas.length;
+}
+
+// 🖼 Mostrar foto
+function mostrarFoto() {
+  if (fotos.length === 0) {
+    mostrarQR();
+    return;
+  }
+
+  ocultarQR();
   escenario.innerHTML = "";
 
   const f = fotos[indice];
-  const url = supabase
+  const { data } = supabase
     .storage
     .from("evento")
-    .getPublicUrl(f.name).data.publicUrl;
+    .getPublicUrl(f.name);
 
   const img = document.createElement("img");
-  img.src = url;
-  img.className = "slide activa";
+  img.src = data.publicUrl;
+  img.className = "slide";
   escenario.appendChild(img);
+
+  requestAnimationFrame(() => {
+    img.classList.add("activa");
+  });
 
   const partes = f.name.split("___");
   const nombre = partes[0]?.replace(/_/g, " ");
   const mensaje = partes[1]?.replace(/_/g, " ");
 
-  const texto = document.getElementById("texto");
-  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje || ""}`;
   texto.style.display = "block";
 
   indice = (indice + 1) % fotos.length;
 }
 
-async function loop() {
-  await cargarFotos();
-  mostrarFoto();
-  setTimeout(loop, 5000);
+// 📱 QR
+function mostrarQR() {
+  if (mostrandoQR) return;
+
+  escenario.innerHTML = "";
+  texto.style.display = "none";
+
+  inicio.style.display = "flex";
+  branding.classList.add("mini");
+  qrTexto.style.display = "block";
+
+  mostrandoQR = true;
 }
 
-loop();
+function ocultarQR() {
+  if (!mostrandoQR) return;
+
+  inicio.style.display = "none";
+  branding.classList.add("mini");
+  qrTexto.style.display = "none";
+
+  mostrandoQR = false;
+}
+
+// ⏱ Loop visual
+function loopVisual() {
+  if (fotos.length > 0) {
+    mostrarFoto();
+  } else {
+    mostrarQR();
+  }
+  setTimeout(loopVisual, 5000);
+}
+
+// 🔄 Buscar nuevas fotos cada 10s
+setInterval(buscarFotos, 10000);
+
+// 🚀 Inicio
+(async () => {
+  await buscarFotos();
+  loopVisual();
+})();
 </script>
 
 </body>
