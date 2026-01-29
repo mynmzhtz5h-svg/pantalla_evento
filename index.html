@@ -1,237 +1,199 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>CRANEOSUY · Pantalla del Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root {
-  --marca: #ffffff;
-  --cliente: rgba(255,255,255,.75);
-}
-
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
-  overflow: hidden;
-  background: #000;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: black;
   color: white;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
 }
 
-/* ===== FONDO ESCÉNICO ===== */
-#fondo {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(120deg, #0f2027, #203a43, #000);
-  background-size: 400% 400%;
-  animation: fondo 25s ease infinite;
-  z-index: 0;
+/* ===== LOGO ===== */
+#branding {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: all .8s ease;
 }
 
-@keyframes fondo {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+#branding img {
+  width: 420px;
+  max-width: 70vw;
 }
 
-/* ===== CONTENEDOR PRINCIPAL ===== */
-#escena {
-  position: fixed;
+#branding.mini img {
+  width: 160px;
+}
+
+/* ===== PANTALLA INICIO ===== */
+#inicio {
+  position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  z-index: 2;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+  z-index: 5;
 }
 
-/* ===== FOTO ===== */
-#foto {
-  max-width: 88vw;
-  max-height: 88vh;
-  border-radius: 28px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.65);
-  opacity: 0;
-  transform: scale(.96);
-  transition: opacity 1.2s ease, transform 1.2s ease;
+#inicio img {
+  width: 320px;
+  background: white;
+  padding: 18px;
+  border-radius: 22px;
+  animation: pulse 2.5s infinite;
 }
 
-#foto.visible {
-  opacity: 1;
-  transform: scale(1);
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-/* ===== NUEVA FOTO ===== */
-#badge {
+/* ===== ESCENARIO ===== */
+#escenario {
   position: absolute;
-  top: 6vh;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.12);
-  backdrop-filter: blur(10px);
-  font-size: 18px;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+.slide {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
   opacity: 0;
-  transform: translateY(-10px);
-  transition: all .6s ease;
+  transition: opacity 1.2s ease;
 }
 
-#badge.visible {
+.slide.activa {
   opacity: 1;
-  transform: translateY(0);
 }
 
-/* ===== MARCA ===== */
-#marca {
-  position: fixed;
-  bottom: 4vh;
-  left: 4vw;
-  font-weight: 700;
-  letter-spacing: .08em;
-  opacity: .85;
-}
-
-/* ===== CLIENTE (OPCIONAL) ===== */
-#cliente {
-  position: fixed;
-  bottom: 4vh;
-  right: 4vw;
-  font-size: 14px;
-  opacity: .6;
-}
-
-/* ===== CTA ===== */
-#cta {
-  position: fixed;
-  top: 4vh;
-  right: 4vw;
-  padding: 12px 18px;
+/* ===== QR MINI ===== */
+#qr-mini {
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  width: 120px;
+  background: white;
+  padding: 10px;
   border-radius: 14px;
-  background: rgba(0,0,0,.45);
-  backdrop-filter: blur(8px);
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 1s ease;
+  display: none;
+  z-index: 9;
 }
 
-#cta.visible {
-  opacity: 1;
+/* ===== TEXTO ===== */
+#texto {
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.6);
+  padding: 14px 22px;
+  border-radius: 16px;
+  font-size: 22px;
+  display: none;
+  text-align: center;
+  z-index: 8;
 }
 </style>
 </head>
 
 <body>
 
-<div id="fondo"></div>
-
-<div id="escena">
-  <img id="foto" />
-  <div id="badge">📸 Nueva foto</div>
+<!-- LOGO -->
+<div id="branding">
+  <img src="logo.png" alt="CRANEOSUY">
 </div>
 
-<div id="marca">CRANEOSUY</div>
-<div id="cliente"></div>
-<div id="cta">📸 Compartí tu foto · Escaneá el QR</div>
+<!-- INICIO -->
+<div id="inicio">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://TU_URL_DE_SUBIDA">
+  <p>Escaneá el QR y subí tu foto</p>
+</div>
+
+<!-- QR CHICO -->
+<img id="qr-mini"
+src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://TU_URL_DE_SUBIDA">
+
+<!-- TEXTO -->
+<div id="texto"></div>
+
+<!-- ESCENARIO -->
+<div id="escenario"></div>
 
 <script>
-/* ========= CONFIGURACIÓN ========= */
-
-// URL REAL DE TU fotos.json (Cloudinary / GitHub / donde esté)
-const URL_FOTOS = "https://mynmzhtz5h-svg.github.io/pantalla-evento/fotos.json";
-
-// Nombre del cliente (dejá "" si no querés mostrar)
-const NOMBRE_CLIENTE = "";
-
-// Tiempo por foto
+/* ========= CONFIG ========= */
+const URL_FOTOS = "https://TU_DOMINIO/fotos.json";
 const INTERVALO = 6000;
 
 /* ========= ESTADO ========= */
-
 let fotos = [];
 let indice = 0;
-let ultimasCantidad = 0;
 
-/* ========= ELEMENTOS ========= */
-
-const img = document.getElementById("foto");
-const badge = document.getElementById("badge");
-const cliente = document.getElementById("cliente");
-const cta = document.getElementById("cta");
-
-/* ========= INIT ========= */
-
-if (NOMBRE_CLIENTE) {
-  cliente.textContent = NOMBRE_CLIENTE;
-}
-
+/* ========= FUNCIONES ========= */
 async function cargarFotos() {
   const res = await fetch(URL_FOTOS + "?t=" + Date.now());
-  if (!res.ok) throw new Error("No se pudo obtener fotos");
+  if (!res.ok) throw new Error("No se pudieron cargar las fotos");
   return res.json();
 }
 
-function mostrarFoto(url, esNueva = false) {
-  img.classList.remove("visible");
-  setTimeout(() => {
-    img.src = url;
-    img.onload = () => {
-      img.classList.add("visible");
-      if (esNueva) mostrarBadge();
-    };
-  }, 600);
-}
+function mostrarFoto(f) {
+  const escenario = document.getElementById("escenario");
+  escenario.innerHTML = "";
 
-function mostrarBadge() {
-  badge.classList.add("visible");
-  setTimeout(() => badge.classList.remove("visible"), 2500);
-}
+  const img = document.createElement("img");
+  img.src = f.secure_url || f.url;
+  img.className = "slide";
 
-function mostrarCTA(mostrar) {
-  cta.classList.toggle("visible", mostrar);
-}
+  escenario.appendChild(img);
 
-/* ========= LOOP ========= */
+  setTimeout(() => img.classList.add("activa"), 50);
 
-async function iniciar() {
-  try {
-    fotos = await cargarFotos();
-    ultimasCantidad = fotos.length;
-    if (fotos.length === 0) {
-      mostrarCTA(true);
-      return;
+  if (f.public_id) {
+    const partes = f.public_id.split("___");
+    if (partes.length > 1) {
+      document.getElementById("texto").innerHTML =
+        `<strong>${partes[0].replace(/_/g," ")}</strong><br>${partes[1].replace(/_/g," ")}`;
+      document.getElementById("texto").style.display = "block";
     }
-    mostrarCTA(false);
-    mostrarFoto(fotos[0]);
-    setInterval(rotar, INTERVALO);
-    setInterval(actualizar, 4000);
-  } catch (e) {
-    console.error(e);
-    mostrarCTA(true);
   }
 }
 
-async function rotar() {
-  if (fotos.length === 0) return;
-  indice = (indice + 1) % fotos.length;
-  mostrarFoto(fotos[indice]);
-}
-
-async function actualizar() {
+async function loop() {
   try {
-    const nuevas = await cargarFotos();
-    if (nuevas.length > ultimasCantidad) {
-      fotos = nuevas;
-      ultimasCantidad = nuevas.length;
-      indice = fotos.length - 1;
-      mostrarFoto(fotos[indice], true);
-    }
-  } catch {}
+    fotos = await cargarFotos();
+
+    if (!fotos.length) return;
+
+    document.getElementById("inicio").style.display = "none";
+    document.getElementById("qr-mini").style.display = "block";
+    document.getElementById("branding").classList.add("mini");
+
+    mostrarFoto(fotos[indice]);
+    indice = (indice + 1) % fotos.length;
+
+  } catch (e) {
+    console.error("Error cargando fotos", e);
+  }
+
+  setTimeout(loop, INTERVALO);
 }
 
-iniciar();
+loop();
 </script>
 
 </body>
