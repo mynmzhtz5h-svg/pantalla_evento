@@ -2,118 +2,124 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pantalla Evento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
-}
+  body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
 
-/* LOGO SIEMPRE ARRIBA */
-#branding {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-}
-#branding img {
-  width: 300px;
-}
+  /* LOGO */
+  #branding {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
 
-/* INICIO QR */
-#inicio {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  text-align: center;
-  z-index: 5;
-}
-#inicio img {
-  width: 320px;
-  background: white;
-  padding: 18px;
-  border-radius: 20px;
-}
+  #branding img {
+    width: 180px;
+  }
 
-/* ESCENARIO */
-#escenario {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.slide {
-  position: absolute;
-  max-width: 85vw;
-  max-height: 75vh;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
-.slide.activa {
-  opacity: 1;
-}
+  /* PANTALLA INICIAL QR */
+  #inicio {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+    z-index: 5;
+  }
 
-/* TEXTO LATERAL */
-#info {
-  position: absolute;
-  left: 40px;
-  top: 50%;
-  transform: translateY(-50%);
-  max-width: 360px;
-  padding: 22px;
-  border-radius: 18px;
-  background: linear-gradient(270deg, #00ffcc, #0066ff, #00ff99);
-  background-size: 600% 600%;
-  animation: colores 6s ease infinite;
-  display: none;
-  z-index: 8;
-}
-#info strong {
-  font-size: 26px;
-}
-#info p {
-  margin-top: 10px;
-  font-size: 20px;
-}
+  #inicio img {
+    width: 320px;
+    background: white;
+    padding: 18px;
+    border-radius: 20px;
+  }
 
-@keyframes colores {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  #inicio p {
+    font-size: 22px;
+  }
 
-/* QR MINI */
-#qr-mini {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  text-align: center;
-  display: none;
-  z-index: 9;
-}
-#qr-mini img {
-  width: 120px;
-  background: white;
-  padding: 10px;
-  border-radius: 14px;
-}
-#qr-mini span {
-  display: block;
-  margin-top: 6px;
-  font-size: 14px;
-}
+  /* ESCENARIO */
+  #escenario {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .slide {
+    max-width: 90vw;
+    max-height: 80vh;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    position: absolute;
+  }
+
+  .slide.activa {
+    opacity: 1;
+  }
+
+  /* TEXTO FOTO */
+  #texto {
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #00ffaa, #00aaff);
+    color: black;
+    padding: 18px 22px;
+    border-radius: 16px;
+    font-size: 22px;
+    max-width: 420px;
+    display: none;
+    z-index: 6;
+  }
+
+  /* QR CHICO */
+  #qr-mini {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 14px;
+    width: 120px;
+    display: none;
+    z-index: 6;
+    text-align: center;
+  }
+
+  #qr-mini img {
+    width: 100%;
+  }
+
+  #qr-mini span {
+    font-size: 13px;
+    color: black;
+    font-weight: 700;
+    display: block;
+    margin-top: 6px;
+  }
+
+  /* BLOQUEO DE PLACEHOLDERS */
+  .emptyFolderPlaceholder,
+  [data-testid="empty-folder"],
+  supabase-empty-folder {
+    display: none !important;
+  }
 </style>
 </head>
 
@@ -125,16 +131,17 @@ body {
 
 <div id="inicio">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-  <p>Escaneá el QR y subí tu foto 📸</p>
+  <p>Escaneá el QR y subí tu foto</p>
 </div>
+
+<div id="escenario"></div>
+
+<div id="texto"></div>
 
 <div id="qr-mini">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
-  <span>SUBÍ TU FOTO Y SE PARTE DE LA FIESTA!</span>
+  <span>¡Subí tu foto!</span>
 </div>
-
-<div id="info"></div>
-<div id="escenario"></div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -144,63 +151,81 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
+const inicio = document.getElementById("inicio");
+const escenario = document.getElementById("escenario");
+const texto = document.getElementById("texto");
+const qrMini = document.getElementById("qr-mini");
+
 let fotos = [];
 let index = 0;
-let mostrandoQR = true;
+let carruselActivo = false;
 
 async function cargarFotos() {
-  const { data } = await supabase.storage.from("evento").list("", {
-    sortBy: { column: "created_at", order: "desc" }
-  });
+  const { data } = await supabase
+    .storage
+    .from("evento")
+    .list("", { sortBy: { column: "created_at", order: "desc" } });
+
   fotos = data || [];
 }
 
 function mostrarQR() {
-  document.getElementById("inicio").style.display = "flex";
-  document.getElementById("qr-mini").style.display = "none";
-  document.getElementById("info").style.display = "none";
-  document.querySelectorAll(".slide").forEach(e => e.remove());
+  inicio.style.display = "flex";
+  qrMini.style.display = "none";
+  texto.style.display = "none";
+  escenario.innerHTML = "";
+  carruselActivo = false;
 }
 
 function mostrarFoto() {
-  if (!fotos.length) return;
+  if (!fotos.length) {
+    mostrarQR();
+    return;
+  }
 
-  document.getElementById("inicio").style.display = "none";
-  document.getElementById("qr-mini").style.display = "block";
+  inicio.style.display = "none";
+  qrMini.style.display = "block";
+  carruselActivo = true;
+
+  escenario.innerHTML = "";
 
   const f = fotos[index];
   const img = document.createElement("img");
-  img.src = `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${f.name}`;
+  img.src = `${supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl}`;
   img.className = "slide activa";
-  document.getElementById("escenario").appendChild(img);
-
-  document.querySelectorAll(".slide:not(:last-child)").forEach(e => e.remove());
+  escenario.appendChild(img);
 
   const partes = f.name.split("___");
-  const nombre = partes[0].replace(/_/g, " ");
+  const nombre = partes[0]?.replace(/_/g, " ");
   const mensaje = partes[1]?.replace(/_/g, " ");
 
-  const info = document.getElementById("info");
-  info.innerHTML = `<strong>${nombre}</strong><p>${mensaje || ""}</p>`;
-  info.style.display = "block";
+  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje || ""}`;
+  texto.style.display = "block";
 
-  index++;
-  if (index >= fotos.length) {
-    index = 0;
-    setTimeout(() => mostrarQR(), 8000);
-    setTimeout(() => iniciarCarrusel(), 18000);
+  index = (index + 1) % fotos.length;
+}
+
+async function iniciar() {
+  await cargarFotos();
+
+  if (!fotos.length) {
+    mostrarQR();
+  } else {
+    mostrarQR();
+    setTimeout(() => {
+      mostrarFoto();
+      setInterval(mostrarFoto, 8000);
+    }, 10000);
   }
 }
 
-async function iniciarCarrusel() {
+setInterval(async () => {
+  const antes = fotos.length;
   await cargarFotos();
-  mostrarFoto();
-  setInterval(mostrarFoto, 8000);
-}
+  if (!carruselActivo && fotos.length) iniciar();
+}, 10000);
 
-mostrarQR();
-setTimeout(iniciarCarrusel, 10000);
-setInterval(cargarFotos, 10000);
+iniciar();
 </script>
 
 </body>
