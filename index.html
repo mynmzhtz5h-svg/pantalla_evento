@@ -200,10 +200,10 @@ async function iniciarCarrusel() {
     img.className = "slide activa";
     carouselContainer.appendChild(img);
 
-    // mostrar autor y mensaje
+    // mostrar autor y mensaje, respetando espacios
     const partes = fotos[i].name.split("___");
-    nombreAutor.textContent = partes[0]?.replace(/_/g,"");
-    mensajeAutor.textContent = partes[1]?.replace(/_/g,"");
+    nombreAutor.textContent = partes[0]?.replace(/_/g," "); 
+    mensajeAutor.textContent = partes[1]?.replace(/_/g," "); 
     autorMensaje.style.display = "block";
     autorMensaje.style.background = `hsl(${Math.random()*360}, 60%, 30%)`;
 
