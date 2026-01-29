@@ -57,6 +57,20 @@ html, body {
   object-fit: contain;
 }
 
+/* TEXTO BAJO QR GRANDE */
+#qr-inicial-texto {
+  position: absolute;
+  top: calc(50% + 240px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 1;
+  transition: opacity 1s;
+}
+
 /* QR chico */
 #qr.chico {
   width: 140px;
@@ -68,7 +82,12 @@ html, body {
   margin: 0;
 }
 
-/* TEXTO QR */
+/* cuando QR es chico, ocultar texto inicial */
+#qr.chico ~ #qr-inicial-texto {
+  opacity: 0;
+}
+
+/* TEXTO QR CHICO */
 #qr-texto {
   position: absolute;
   bottom: 180px;
@@ -134,7 +153,15 @@ html, body {
   <div id="qr">
     <img src="qr.png" alt="QR">
   </div>
-  <div id="qr-texto">SUBÍ TU FOTO<br>Y SÉ PARTE DE LA FIESTA!</div>
+
+  <div id="qr-texto">
+    SUBÍ TU FOTO<br>Y SÉ PARTE DE LA FIESTA!
+  </div>
+
+  <div id="qr-inicial-texto">
+    Escaneá el QR<br>
+    Subí tu foto y sé parte de la fiesta!
+  </div>
 
   <div id="carrusel">
     <img id="foto">
@@ -162,9 +189,7 @@ const info = document.getElementById("info");
 
 async function cargarFotos() {
   const { data } = await supabase.storage.from("evento").list("", { limit: 100 });
-  return (data || []).filter(f =>
-    /\.(jpg|jpeg|png)$/i.test(f.name)
-  );
+  return (data || []).filter(f => /\.(jpg|jpeg|png)$/i.test(f.name));
 }
 
 async function iniciar() {
@@ -189,7 +214,6 @@ function mostrar() {
   info.innerHTML = `<strong>${partes[0]}</strong><br>${(partes[1]||"").replace(/_/g," ")}`;
 
   indice = (indice + 1) % fotos.length;
-
   setTimeout(mostrar, DURACION);
 }
 
