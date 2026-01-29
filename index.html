@@ -2,210 +2,183 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>CRANEOSUY · Pantalla del Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pantalla Evento</title>
 
 <style>
-body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow: hidden;
-}
+  body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
 
-/* ===== LOGO ===== */
-#branding {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  transition: all .8s ease;
-}
+  #branding {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: all .6s ease;
+  }
 
-#branding img {
-  width: 420px;
-  max-width: 70vw;
-}
+  #branding img {
+    width: 50vw;
+    max-width: 420px;
+  }
 
-#branding.mini img {
-  width: 160px;
-}
+  #branding.mini img {
+    width: 160px;
+  }
 
-/* ===== PANTALLA INICIAL ===== */
-#inicio {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 26px;
-  text-align: center;
-  z-index: 5;
-}
+  #inicio {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+  }
 
-#inicio img {
-  width: 320px;
-  background: white;
-  padding: 18px;
-  border-radius: 22px;
-  animation: pulse 2.5s infinite;
-}
+  #inicio img {
+    width: 300px;
+    background: white;
+    padding: 18px;
+    border-radius: 22px;
+  }
 
-@keyframes pulse {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
+  #qr-mini {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    background: white;
+    padding: 10px;
+    border-radius: 14px;
+    display: none;
+    z-index: 9;
+  }
 
-#inicio p {
-  font-size: 22px;
-  opacity: .9;
-}
+  #escenario {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
 
-/* ===== ESCENARIO ===== */
-#escenario {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1;
-}
+  .slide {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 1s ease;
+    position: absolute;
+  }
 
-.slide {
-  max-width: 90vw;
-  max-height: 85vh;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
+  .slide.activa {
+    opacity: 1;
+  }
 
-.slide.activa {
-  opacity: 1;
-}
-
-/* ===== QR MINI ===== */
-#qr-mini {
-  position: absolute;
-  bottom: 22px;
-  right: 22px;
-  width: 120px;
-  background: white;
-  padding: 10px;
-  border-radius: 14px;
-  display: none;
-  z-index: 9;
-}
-
-/* ===== TEXTO ===== */
-#texto {
-  position: absolute;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,.6);
-  padding: 14px 22px;
-  border-radius: 16px;
-  font-size: 22px;
-  display: none;
-  text-align: center;
-  z-index: 8;
-}
+  #texto {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.6);
+    padding: 14px 24px;
+    border-radius: 16px;
+    font-size: 22px;
+    display: none;
+    text-align: center;
+    z-index: 5;
+  }
 </style>
 </head>
 
 <body>
 
-<!-- LOGO -->
 <div id="branding">
-  <img src="logo.png" alt="CRANEOSUY">
+  <img src="logo.png" alt="Logo">
 </div>
 
-<!-- INICIO -->
 <div id="inicio">
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
   <p>Escaneá el QR y subí tu foto</p>
 </div>
 
-<!-- QR CHICO -->
-<img
-  id="qr-mini"
-  src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/"
->
+<img id="qr-mini"
+src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
 
-<!-- TEXTO -->
+<div id="escenario"></div>
 <div id="texto"></div>
 
-<!-- ESCENARIO -->
-<div id="escenario"></div>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-<script>
-/* ==================================================
-   CONFIGURACIÓN
-   👉 ACÁ SOLO CAMBIÁS LA URL DE LAS FOTOS
-================================================== */
-const URL_FOTOS = "https://mynmzhtz5h-svg.github.io/pantalla-evento/fotos.json";
-const INTERVALO = 6000;
+const supabase = createClient(
+  "https://mjmbvzvirvtsihtyrqqf.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
+);
 
-/* ==================================================
-   ESTADO
-================================================== */
 let fotos = [];
 let indice = 0;
+let iniciado = false;
 
-/* ==================================================
-   FUNCIONES
-================================================== */
 async function cargarFotos() {
-  const res = await fetch(URL_FOTOS + "?t=" + Date.now());
-  if (!res.ok) throw new Error("No se pudieron cargar las fotos");
-  return res.json();
+  const { data, error } = await supabase
+    .storage
+    .from("evento")
+    .list("", { limit: 100, sortBy: { column: "created_at", order: "asc" } });
+
+  if (error) return;
+
+  fotos = data.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i));
 }
 
-function mostrarFoto(f) {
-  const escenario = document.getElementById("escenario");
-  escenario.innerHTML = "";
+function mostrarFoto() {
+  if (!fotos.length) return;
 
-  const img = document.createElement("img");
-  img.src = f.secure_url || f.url;
-  img.className = "slide";
-
-  escenario.appendChild(img);
-  setTimeout(() => img.classList.add("activa"), 50);
-
-  // Texto opcional desde public_id
-  if (f.public_id && f.public_id.includes("___")) {
-    const partes = f.public_id.split("___");
-    const nombre = partes[0].replace(/_/g, " ");
-    const mensaje = partes[1]?.replace(/_/g, " ");
-
-    const texto = document.getElementById("texto");
-    texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
-    texto.style.display = "block";
-  }
-}
-
-async function loop() {
-  try {
-    fotos = await cargarFotos();
-    if (!fotos.length) return;
-
-    // Transición visual (solo una vez)
+  if (!iniciado) {
     document.getElementById("inicio").style.display = "none";
     document.getElementById("qr-mini").style.display = "block";
     document.getElementById("branding").classList.add("mini");
-
-    mostrarFoto(fotos[indice]);
-    indice = (indice + 1) % fotos.length;
-
-  } catch (e) {
-    console.error("Error cargando fotos", e);
+    iniciado = true;
   }
 
-  setTimeout(loop, INTERVALO);
+  const escenario = document.getElementById("escenario");
+  escenario.innerHTML = "";
+
+  const f = fotos[indice];
+  const url = supabase
+    .storage
+    .from("evento")
+    .getPublicUrl(f.name).data.publicUrl;
+
+  const img = document.createElement("img");
+  img.src = url;
+  img.className = "slide activa";
+  escenario.appendChild(img);
+
+  const partes = f.name.split("___");
+  const nombre = partes[0]?.replace(/_/g, " ");
+  const mensaje = partes[1]?.replace(/_/g, " ");
+
+  const texto = document.getElementById("texto");
+  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  texto.style.display = "block";
+
+  indice = (indice + 1) % fotos.length;
+}
+
+async function loop() {
+  await cargarFotos();
+  mostrarFoto();
+  setTimeout(loop, 5000);
 }
 
 loop();
