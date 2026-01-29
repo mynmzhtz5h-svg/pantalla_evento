@@ -1,102 +1,99 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Pantalla Evento</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #111, #000);
-  color: #fff;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#111,#000);
+  color:#fff;
+  font-family:system-ui,sans-serif;
+  overflow:hidden;
 }
 
-#logo {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  z-index: 10;
+#logo{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:200px;
+  z-index:10;
 }
 
-#contenedor {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#contenedor{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-#foto {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity 1s ease;
+#foto{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  opacity:0;
+  transition:opacity 1s ease;
+  display:none; /* 🔑 CLAVE */
 }
 
-#qrGrande {
-  position: absolute;
-  width: 420px;
-  opacity: 0;
-  transition: opacity 1s ease;
+#qrGrande{
+  width:420px;
+  opacity:0;
+  transition:opacity 1s ease;
 }
 
-#qrMini {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  width: 140px;
-  opacity: 0;
-  transition: opacity 1s ease;
+#qrMini{
+  position:absolute;
+  bottom:30px;
+  right:30px;
+  width:140px;
+  opacity:0;
+  transition:opacity 1s ease;
 }
 
-#textoQR {
-  position: absolute;
-  bottom: 190px;
-  right: 30px;
-  width: 260px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  opacity: 0;
-  transition: opacity 1s ease;
+#textoQR{
+  position:absolute;
+  bottom:190px;
+  right:30px;
+  width:260px;
+  text-align:center;
+  font-size:18px;
+  font-weight:700;
+  opacity:0;
+  transition:opacity 1s ease;
 }
 
-#info {
-  position: absolute;
-  left: 40px;
-  max-width: 420px;
-  padding: 20px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #00ffcc, #0066ff);
-  color: #000;
-  opacity: 0;
-  transition: opacity 1s ease;
+#info{
+  position:absolute;
+  left:40px;
+  max-width:420px;
+  padding:20px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#00ffcc,#0066ff);
+  color:#000;
+  opacity:0;
+  transition:opacity 1s ease;
 }
 
-#nombre {
-  font-size: 24px;
-  font-weight: 800;
+#nombre{
+  font-size:24px;
+  font-weight:800;
 }
 
-#mensaje {
-  font-size: 18px;
-  margin-top: 8px;
+#mensaje{
+  font-size:18px;
+  margin-top:8px;
 }
 </style>
 </head>
 
 <body>
 
-<img id="logo" src="logo.png" alt="Logo">
-
+<img id="logo" src="logo.png">
 <div id="contenedor">
   <img id="foto">
   <img id="qrGrande" src="qr.png">
@@ -130,11 +127,12 @@ let fotos = [];
 let index = 0;
 let carruselActivo = false;
 
-function mostrarQRGrande() {
+function mostrarQR() {
   qrGrande.style.opacity = 1;
   qrMini.style.opacity = 0;
   textoQR.style.opacity = 0;
   foto.style.opacity = 0;
+  foto.style.display = "none";
   info.style.opacity = 0;
 }
 
@@ -143,14 +141,15 @@ function iniciarCarrusel() {
   qrGrande.style.opacity = 0;
   qrMini.style.opacity = 1;
   textoQR.style.opacity = 1;
+  foto.style.display = "block";
   mostrarFoto();
 }
 
 function mostrarFoto() {
-  const item = fotos[index];
-  foto.src = item.url;
-  nombreEl.textContent = item.nombre || "";
-  mensajeEl.textContent = item.mensaje || "";
+  const f = fotos[index];
+  foto.src = f.url;
+  nombreEl.textContent = f.nombre || "";
+  mensajeEl.textContent = f.mensaje || "";
   foto.style.opacity = 1;
   info.style.opacity = 1;
 
@@ -162,7 +161,7 @@ function mostrarFoto() {
     if (index >= fotos.length) {
       carruselActivo = false;
       index = 0;
-      mostrarQRGrande();
+      mostrarQR();
       setTimeout(() => {
         if (fotos.length) iniciarCarrusel();
       }, 10000);
@@ -174,33 +173,32 @@ function mostrarFoto() {
 
 async function cargarFotos() {
   const { data } = await supabase.storage.from("evento").list("", { limit: 100 });
+
   const validas = (data || []).filter(f =>
     /\.(jpg|jpeg|png)$/i.test(f.name)
   );
 
   if (!validas.length) {
-    mostrarQRGrande();
+    mostrarQR();
     return;
   }
 
-  fotos = validas
-    .reverse()
-    .map(f => {
-      const partes = f.name.split("___");
-      return {
-        url: supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl,
-        nombre: partes[0]?.replace(/_/g, " "),
-        mensaje: partes[1]?.replace(/_/g, " ")
-      };
-    });
+  fotos = validas.reverse().map(f => {
+    const p = f.name.split("___");
+    return {
+      url: supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl,
+      nombre: p[0]?.replace(/_/g," "),
+      mensaje: p[1]?.replace(/_/g," ")
+    };
+  });
 
   if (!carruselActivo) {
-    mostrarQRGrande();
+    mostrarQR();
     setTimeout(iniciarCarrusel, 10000);
   }
 }
 
-mostrarQRGrande();
+mostrarQR();
 cargarFotos();
 setInterval(cargarFotos, 10000);
 </script>
