@@ -5,124 +5,124 @@
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html, body {
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  background: radial-gradient(circle at center, #222 0%, #000 70%);
-  font-family: system-ui, sans-serif;
-  overflow:hidden;
-}
+  body {
+    margin: 0;
+    background: radial-gradient(circle at top, #111, #444);
+    color: white;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
 
-/* LOGO */
-#logo {
-  position:absolute;
-  top:20px;
-  left:50%;
-  transform:translateX(-50%);
-  width:220px;
-  z-index:10;
-}
+  #branding {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: all .6s ease;
+  }
 
-/* QR + TEXTO INICIAL */
-#qr-container {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  transition: all 1s ease;
-  z-index:9;
-  text-align:center;
-}
-#qr-container.chico {
-  position: absolute;
-  right: 20px;       /* menos distancia del borde derecho */
-  bottom: 40px;
-  width: 120px;      /* manteniendo tamaño del QR chico */
-  height: 120px;
-  padding: 10px;
-  border-radius: 12px;
-  transform: none;
-}
-#qr-container img {
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  border-radius:12px;
-}
-#qr-texto {
-  margin-top:12px;
-  color:#fff;
-  font-size:18px;
-  font-weight:600;
-  text-shadow: 0 0 8px #000;
-}
+  #branding img {
+    width: 200px;
+    max-width: 300px;
+  }
 
-/* CARRUSEL */
-#carrusel-contenedor {
-  position:absolute;
-  top:100px;
-  left:0;
-  right:0;
-  bottom:60px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  overflow:hidden;
-  z-index:1;
-}
-#carrusel {
-  width:90%;
-  height:90%;
-  position:relative;
-}
-#carrusel img {
-  position:absolute;
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  opacity:0;
-  transition: opacity 1s ease;
-}
-#carrusel img.activa {
-  opacity:1;
-}
+  #carousel-container {
+    position: absolute;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 900px;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    z-index: 1;
+  }
 
-/* INFO FOTO */
-#info {
-  position:absolute;
-  left:40px;
-  bottom:40px;
-  max-width:40%;
-  padding:20px;
-  border-radius:16px;
-  background: linear-gradient(135deg, #00ffcc, #0066ff);
-  color:#000;
-  font-size:20px;
-  z-index:2;
-  box-shadow:0 10px 30px rgba(0,0,0,.5);
-}
+  .slide {
+    position: absolute;
+    max-width: 100%;
+    max-height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    object-fit: contain;
+  }
+
+  .slide.activa {
+    opacity: 1;
+  }
+
+  #qr-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    transition: all 1s ease;
+    z-index: 5;
+  }
+
+  #qr-container.chico {
+    top: auto;
+    left: auto;
+    right: 20px;  /* ajustado al borde */
+    bottom: 40px;
+    transform: none;
+    width: 120px;
+    height: 120px;
+  }
+
+  #qr-container img {
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  #qr-text {
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 4px #000;
+  }
+
+  #autor-mensaje {
+    position: absolute;
+    left: 20px;
+    bottom: 50px;
+    max-width: 40%;
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 18px;
+    color: #fff;
+    z-index: 3;
+    display: none;
+  }
+
+  #autor-mensaje span {
+    display: block;
+    font-weight: bold;
+  }
 </style>
 </head>
 
 <body>
-<img id="logo" src="logo.png" alt="Logo">
+<div id="branding">
+  <img src="logo.png" alt="Logo">
+</div>
 
-<a id="qr-container" href="https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" target="_blank">
+<div id="carousel-container"></div>
+
+<div id="qr-container">
   <img src="qr.png" alt="QR">
-  <div id="qr-texto">Escanea, subí tu foto y sé parte de la fiesta!</div>
-</a>
+  <div id="qr-text">Escanea, subí tu foto y se parte de la fiesta!</div>
+</div>
 
-<div id="carrusel-contenedor">
-  <div id="carrusel"></div>
-  <div id="info"></div>
+<div id="autor-mensaje">
+  <span id="nombre-autor"></span>
+  <span id="mensaje-autor"></span>
 </div>
 
 <script type="module">
@@ -133,98 +133,107 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
-const carrusel = document.getElementById("carrusel");
-const info = document.getElementById("info");
+const carouselContainer = document.getElementById("carousel-container");
 const qrContainer = document.getElementById("qr-container");
+const qrText = document.getElementById("qr-text");
+const autorMensaje = document.getElementById("autor-mensaje");
+const nombreAutor = document.getElementById("nombre-autor");
+const mensajeAutor = document.getElementById("mensaje-autor");
 
 let fotos = [];
 let i = 0;
+const duracionFoto = 10000; // 10s
+const fadeDuracion = 1000; // 1s
+const intervaloBusqueda = 10000; // 10s
+const duracionInicial = 10000; // 10s pantalla inicial
 
 async function cargarFotos() {
-  const { data, error } = await supabase.storage.from("evento").list("", {limit:100, offset:0});
-  if(error) return [];
-  return data.filter(f => /\.(jpe?g|png)$/i.test(f.name)).sort((a,b)=>b.created_at - a.created_at);
+  try {
+    const { data, error } = await supabase.storage.from("evento").list("", {limit: 100, offset: 0});
+    if (error) throw error;
+
+    fotos = data
+      .filter(f => /\.(jpe?g|png)$/i.test(f.name))
+      .map(f => ({
+        name: f.name,
+        url: `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${encodeURIComponent(f.name)}`
+      }));
+
+  } catch (e) {
+    console.error("Error cargando fotos:", e);
+    fotos = [];
+  }
 }
 
-function crearImg(f){
-  const img = document.createElement("img");
-  img.src = `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${encodeURIComponent(f.name)}`;
-  return img;
-}
-
-function mostrarQRGrande() {
+function mostrarQRInicial() {
   qrContainer.classList.remove("chico");
-  qrContainer.querySelector("#qr-texto").textContent = "Escanea, subí tu foto y sé parte de la fiesta!";
+  qrText.textContent = "Escanea, subí tu foto y se parte de la fiesta!";
+  autorMensaje.style.display = "none";
+  carouselContainer.innerHTML = "";
 }
 
 function moverQRChico() {
   qrContainer.classList.add("chico");
-  qrContainer.querySelector("#qr-texto").textContent = "Escanea para participar";
+  qrText.textContent = "Escanea para participar";
 }
 
 async function iniciarCarrusel() {
-  if(fotos.length === 0) {
-    mostrarQRGrande();
+  await cargarFotos();
+
+  if (!fotos.length) {
+    mostrarQRInicial();
     return;
   }
 
+  // fade out QR inicial
+  qrContainer.style.opacity = 0;
+  await new Promise(r => setTimeout(r, fadeDuracion));
+  carouselContainer.innerHTML = "";
+  qrContainer.style.opacity = 1;
+
   moverQRChico();
 
-  carrusel.innerHTML = "";
-  info.innerHTML = "";
-  i = 0;
+  for (i = 0; i < fotos.length; i++) {
+    carouselContainer.innerHTML = "";
 
-  fotos.forEach(f => carrusel.appendChild(crearImg(f)));
+    const img = document.createElement("img");
+    img.src = fotos[i].url;
+    img.className = "slide activa";
+    carouselContainer.appendChild(img);
 
-  while(true){
-    const imagenes = Array.from(carrusel.querySelectorAll("img"));
-    if(imagenes.length===0){
-      mostrarQRGrande();
-      await new Promise(r=>setTimeout(r,10000));
-      fotos = await cargarFotos();
-      continue;
-    }
+    // mostrar autor y mensaje
+    const partes = fotos[i].name.split("___");
+    nombreAutor.textContent = partes[0]?.replace(/_/g," ");
+    mensajeAutor.textContent = partes[1]?.replace(/_/g," ");
+    autorMensaje.style.display = "block";
+    autorMensaje.style.background = `hsl(${Math.random()*360}, 60%, 30%)`;
 
-    const img = imagenes[i];
-    imagenes.forEach(im=>im.classList.remove("activa"));
-    img.classList.add("activa");
+    await new Promise(r => setTimeout(r, duracionFoto));
+  }
 
-    // info foto
-    const partes = img.src.split("/").pop().split("___");
-    const nombre = partes[0]?.replace(/_/g," ");
-    const mensaje = partes[1]?.replace(/_/g," ");
-    info.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+  // fade out ultima foto
+  carouselContainer.innerHTML = "";
+  autorMensaje.style.display = "none";
 
-    await new Promise(r=>setTimeout(r,10000));
-    i++;
+  // QR inicial fade in
+  mostrarQRInicial();
+  await new Promise(r => setTimeout(r, duracionInicial));
+}
 
-    if(i>=imagenes.length){
-      // fade out a negro y mostrar QR inicial
-      imagenes.forEach(im=>im.classList.remove("activa"));
-      info.innerHTML = "";
-      mostrarQRGrande();
-      await new Promise(r=>setTimeout(r,10000));
-      fotos = await cargarFotos();
-      if(fotos.length>0) moverQRChico();
-      i=0;
-    }
+async function loop() {
+  mostrarQRInicial();
+  await new Promise(r => setTimeout(r, duracionInicial));
+  while (true) {
+    await iniciarCarrusel();
+    await new Promise(r => setTimeout(r, duracionInicial));
+    await cargarFotos();
   }
 }
 
-(async function loop(){
-  fotos = await cargarFotos();
-  if(fotos.length===0) mostrarQRGrande();
+// búsqueda automática de nuevas fotos
+setInterval(cargarFotos, intervaloBusqueda);
 
-  // chequeo de nuevas fotos cada 10s
-  setInterval(async ()=>{
-    const nuevas = await cargarFotos();
-    if(nuevas.length>fotos.length) fotos = nuevas;
-  },10000);
-
-  // espera 10s inicial
-  await new Promise(r=>setTimeout(r,10000));
-  iniciarCarrusel();
-})();
+loop();
 </script>
 </body>
 </html>
