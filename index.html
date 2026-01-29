@@ -10,7 +10,7 @@ body {
   margin: 0;
   background: black;
   color: white;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
 }
 
@@ -33,7 +33,7 @@ body {
   width: 160px;
 }
 
-/* ===== PANTALLA INICIO ===== */
+/* ===== PANTALLA INICIAL ===== */
 #inicio {
   position: absolute;
   inset: 0;
@@ -55,9 +55,14 @@ body {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
   100% { transform: scale(1); }
+}
+
+#inicio p {
+  font-size: 22px;
+  opacity: .9;
 }
 
 /* ===== ESCENARIO ===== */
@@ -126,8 +131,10 @@ body {
 </div>
 
 <!-- QR CHICO -->
-<img id="qr-mini"
-src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+<img
+  id="qr-mini"
+  src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/"
+>
 
 <!-- TEXTO -->
 <div id="texto"></div>
@@ -136,15 +143,22 @@ src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmz
 <div id="escenario"></div>
 
 <script>
-/* ========= CONFIG ========= */
-const URL_FOTOS = "https://TU_DOMINIO/fotos.json";
+/* ==================================================
+   CONFIGURACIÓN
+   👉 ACÁ SOLO CAMBIÁS LA URL DE LAS FOTOS
+================================================== */
+const URL_FOTOS = "https://mynmzhtz5h-svg.github.io/pantalla-evento/fotos.json";
 const INTERVALO = 6000;
 
-/* ========= ESTADO ========= */
+/* ==================================================
+   ESTADO
+================================================== */
 let fotos = [];
 let indice = 0;
 
-/* ========= FUNCIONES ========= */
+/* ==================================================
+   FUNCIONES
+================================================== */
 async function cargarFotos() {
   const res = await fetch(URL_FOTOS + "?t=" + Date.now());
   if (!res.ok) throw new Error("No se pudieron cargar las fotos");
@@ -160,25 +174,26 @@ function mostrarFoto(f) {
   img.className = "slide";
 
   escenario.appendChild(img);
-
   setTimeout(() => img.classList.add("activa"), 50);
 
-  if (f.public_id) {
+  // Texto opcional desde public_id
+  if (f.public_id && f.public_id.includes("___")) {
     const partes = f.public_id.split("___");
-    if (partes.length > 1) {
-      document.getElementById("texto").innerHTML =
-        `<strong>${partes[0].replace(/_/g," ")}</strong><br>${partes[1].replace(/_/g," ")}`;
-      document.getElementById("texto").style.display = "block";
-    }
+    const nombre = partes[0].replace(/_/g, " ");
+    const mensaje = partes[1]?.replace(/_/g, " ");
+
+    const texto = document.getElementById("texto");
+    texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
+    texto.style.display = "block";
   }
 }
 
 async function loop() {
   try {
     fotos = await cargarFotos();
-
     if (!fotos.length) return;
 
+    // Transición visual (solo una vez)
     document.getElementById("inicio").style.display = "none";
     document.getElementById("qr-mini").style.display = "block";
     document.getElementById("branding").classList.add("mini");
