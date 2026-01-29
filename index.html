@@ -2,20 +2,50 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pantalla Evento</title>
 
 <style>
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  overflow: hidden;
+  background: black;
+  color: white;
   font-family: system-ui, sans-serif;
+  overflow: hidden;
 }
 
+/* LOGO SIEMPRE ARRIBA */
+#branding {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+#branding img {
+  width: 300px;
+}
+
+/* INICIO QR */
+#inicio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+  z-index: 5;
+}
+#inicio img {
+  width: 320px;
+  background: white;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+/* ESCENARIO */
 #escenario {
   position: absolute;
   inset: 0;
@@ -23,105 +53,88 @@ html, body {
   justify-content: center;
   align-items: center;
 }
-
 .slide {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  max-width: 85vw;
+  max-height: 75vh;
   object-fit: contain;
   opacity: 0;
-  transform: scale(1.05);
-  transition: opacity 1s ease, transform 1s ease;
+  transition: opacity 1.2s ease;
 }
-
 .slide.activa {
   opacity: 1;
-  transform: scale(1);
 }
 
-#texto {
+/* TEXTO LATERAL */
+#info {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  font-size: 28px;
-  color: #fff;
-  text-shadow: 0 2px 12px #000;
+  left: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 360px;
+  padding: 22px;
+  border-radius: 18px;
+  background: linear-gradient(270deg, #00ffcc, #0066ff, #00ff99);
+  background-size: 600% 600%;
+  animation: colores 6s ease infinite;
   display: none;
+  z-index: 8;
+}
+#info strong {
+  font-size: 26px;
+}
+#info p {
+  margin-top: 10px;
+  font-size: 20px;
 }
 
-#inicio {
+@keyframes colores {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* QR MINI */
+#qr-mini {
   position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#qr-grande {
-  width: 360px;
-}
-
-#branding {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-#branding img {
-  width: 180px;
-}
-
-#branding.mini {
-  top: auto;
   bottom: 20px;
   right: 20px;
-  left: auto;
-  transform: none;
+  text-align: center;
+  display: none;
+  z-index: 9;
 }
-
-#branding.mini img {
+#qr-mini img {
   width: 120px;
+  background: white;
+  padding: 10px;
+  border-radius: 14px;
 }
-
-#qr-mini {
-  display: none;
-}
-
-#qr-texto {
-  position: absolute;
-  bottom: 150px;
-  right: 20px;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  text-align: right;
-  display: none;
+#qr-mini span {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="escenario"></div>
-
-<div id="inicio">
-  <img id="qr-grande" src="qr.png" alt="QR">
+<div id="branding">
+  <img src="logo.png">
 </div>
 
-<div id="branding">
-  <img src="logo.png" alt="Logo">
+<div id="inicio">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+  <p>Escaneá el QR y subí tu foto 📸</p>
 </div>
 
 <div id="qr-mini">
-  <img src="qr.png" width="140">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mynmzhtz5h-svg.github.io/subida-fotos-evento/">
+  <span>SUBÍ TU FOTO Y SE PARTE DE LA FIESTA!</span>
 </div>
 
-<div id="qr-texto">📸 Escaneá y subí tu foto</div>
-
-<div id="texto"></div>
+<div id="info"></div>
+<div id="escenario"></div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -131,118 +144,63 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
-const escenario = document.getElementById("escenario");
-const texto = document.getElementById("texto");
-const inicio = document.getElementById("inicio");
-const branding = document.getElementById("branding");
-const qrTexto = document.getElementById("qr-texto");
-
 let fotos = [];
-let indice = 0;
-let ultimaCantidad = 0;
+let index = 0;
 let mostrandoQR = true;
 
-// 🔍 Buscar fotos
-async function buscarFotos() {
-  const { data } = await supabase
-    .storage
-    .from("evento")
-    .list("", {
-      limit: 100,
-      sortBy: { column: "created_at", order: "desc" }
-    });
-
-  if (!data) return;
-
-  const nuevas = data.filter(f =>
-    f.name.match(/\.(jpg|jpeg|png|webp)$/i)
-  );
-
-  if (nuevas.length > ultimaCantidad) {
-    fotos = nuevas;
-    indice = 0;
-  }
-
-  ultimaCantidad = nuevas.length;
+async function cargarFotos() {
+  const { data } = await supabase.storage.from("evento").list("", {
+    sortBy: { column: "created_at", order: "desc" }
+  });
+  fotos = data || [];
 }
 
-// 🖼 Mostrar foto
+function mostrarQR() {
+  document.getElementById("inicio").style.display = "flex";
+  document.getElementById("qr-mini").style.display = "none";
+  document.getElementById("info").style.display = "none";
+  document.querySelectorAll(".slide").forEach(e => e.remove());
+}
+
 function mostrarFoto() {
-  if (fotos.length === 0) {
-    mostrarQR();
-    return;
-  }
+  if (!fotos.length) return;
 
-  ocultarQR();
-  escenario.innerHTML = "";
+  document.getElementById("inicio").style.display = "none";
+  document.getElementById("qr-mini").style.display = "block";
 
-  const f = fotos[indice];
-  const { data } = supabase
-    .storage
-    .from("evento")
-    .getPublicUrl(f.name);
-
+  const f = fotos[index];
   const img = document.createElement("img");
-  img.src = data.publicUrl;
-  img.className = "slide";
-  escenario.appendChild(img);
+  img.src = `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${f.name}`;
+  img.className = "slide activa";
+  document.getElementById("escenario").appendChild(img);
 
-  requestAnimationFrame(() => {
-    img.classList.add("activa");
-  });
+  document.querySelectorAll(".slide:not(:last-child)").forEach(e => e.remove());
 
   const partes = f.name.split("___");
-  const nombre = partes[0]?.replace(/_/g, " ");
+  const nombre = partes[0].replace(/_/g, " ");
   const mensaje = partes[1]?.replace(/_/g, " ");
 
-  texto.innerHTML = `<strong>${nombre}</strong><br>${mensaje || ""}`;
-  texto.style.display = "block";
+  const info = document.getElementById("info");
+  info.innerHTML = `<strong>${nombre}</strong><p>${mensaje || ""}</p>`;
+  info.style.display = "block";
 
-  indice = (indice + 1) % fotos.length;
-}
-
-// 📱 QR
-function mostrarQR() {
-  if (mostrandoQR) return;
-
-  escenario.innerHTML = "";
-  texto.style.display = "none";
-
-  inicio.style.display = "flex";
-  branding.classList.add("mini");
-  qrTexto.style.display = "block";
-
-  mostrandoQR = true;
-}
-
-function ocultarQR() {
-  if (!mostrandoQR) return;
-
-  inicio.style.display = "none";
-  branding.classList.add("mini");
-  qrTexto.style.display = "none";
-
-  mostrandoQR = false;
-}
-
-// ⏱ Loop visual
-function loopVisual() {
-  if (fotos.length > 0) {
-    mostrarFoto();
-  } else {
-    mostrarQR();
+  index++;
+  if (index >= fotos.length) {
+    index = 0;
+    setTimeout(() => mostrarQR(), 8000);
+    setTimeout(() => iniciarCarrusel(), 18000);
   }
-  setTimeout(loopVisual, 5000);
 }
 
-// 🔄 Buscar nuevas fotos cada 10s
-setInterval(buscarFotos, 10000);
+async function iniciarCarrusel() {
+  await cargarFotos();
+  mostrarFoto();
+  setInterval(mostrarFoto, 8000);
+}
 
-// 🚀 Inicio
-(async () => {
-  await buscarFotos();
-  loopVisual();
-})();
+mostrarQR();
+setTimeout(iniciarCarrusel, 10000);
+setInterval(cargarFotos, 10000);
 </script>
 
 </body>
