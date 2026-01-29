@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Evento en Vivo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>Pantalla Evento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   background: radial-gradient(circle at top, #111, #000);
@@ -14,133 +16,98 @@ body {
   overflow: hidden;
 }
 
-/* CONTENEDOR GENERAL */
-#app {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-}
-
-/* LOGO */
 #logo {
   position: absolute;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
+  width: 200px;
   z-index: 10;
 }
-#logo img {
-  height: 80px;
-}
 
-/* QR GRANDE */
-#qrScreen {
+#contenedor {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  text-align: center;
 }
 
-#qrScreen img {
-  width: 320px;
-}
-
-#qrScreen h1 {
-  font-size: 32px;
-}
-
-/* CARRUSEL */
-#carousel {
-  position: absolute;
-  inset: 0;
-  display: none;
-}
-
-.slide {
-  position: absolute;
-  inset: 0;
+#foto {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   opacity: 0;
   transition: opacity 1s ease;
 }
 
-.slide.active {
-  opacity: 1;
+#qrGrande {
+  position: absolute;
+  width: 420px;
+  opacity: 0;
+  transition: opacity 1s ease;
 }
 
-.slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+#qrMini {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  width: 140px;
+  opacity: 0;
+  transition: opacity 1s ease;
 }
 
-/* INFO FOTO */
-.infoBox {
+#textoQR {
+  position: absolute;
+  bottom: 190px;
+  right: 30px;
+  width: 260px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+#info {
   position: absolute;
   left: 40px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 20px 26px;
-  border-radius: 18px;
-  max-width: 35%;
-  animation: colorShift 8s linear infinite;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #00ffcc, #0066ff);
+  color: #000;
+  opacity: 0;
+  transition: opacity 1s ease;
 }
 
-@keyframes colorShift {
-  0% { background: rgba(0,150,136,.85); }
-  50% { background: rgba(33,150,243,.85); }
-  100% { background: rgba(156,39,176,.85); }
+#nombre {
+  font-size: 24px;
+  font-weight: 800;
 }
 
-.infoBox h2 {
-  margin: 0 0 8px;
-}
-
-/* QR PEQUEÑO */
-#qrCorner {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  text-align: center;
-  display: none;
-}
-
-#qrCorner img {
-  width: 120px;
-}
-
-#qrCorner p {
+#mensaje {
+  font-size: 18px;
   margin-top: 8px;
-  font-weight: 700;
 }
 </style>
 </head>
 
 <body>
-<div id="app">
 
-  <div id="logo">
-    <img src="logo.png">
-  </div>
+<img id="logo" src="logo.png" alt="Logo">
 
-  <!-- QR INICIAL -->
-  <div id="qrScreen">
-    <img src="qr.png">
-    <h1>Escaneá y subí tu foto 📸</h1>
-  </div>
+<div id="contenedor">
+  <img id="foto">
+  <img id="qrGrande" src="qr.png">
+  <img id="qrMini" src="qr.png">
+</div>
 
-  <!-- CARRUSEL -->
-  <div id="carousel"></div>
+<div id="textoQR">SUBÍ TU FOTO Y SÉ PARTE DE LA FIESTA!</div>
 
-  <!-- QR CHICO -->
-  <div id="qrCorner">
-    <img src="qr.png">
-    <p>SUBÍ TU FOTO Y SÉ PARTE DE LA FIESTA!</p>
-  </div>
-
+<div id="info">
+  <div id="nombre"></div>
+  <div id="mensaje"></div>
 </div>
 
 <script type="module">
@@ -148,100 +115,94 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://mjmbvzvirvtsihtyrqqf.supabase.co",
-  "PUBLIC_ANON_KEY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
 );
 
-const qrScreen = document.getElementById("qrScreen");
-const carousel = document.getElementById("carousel");
-const qrCorner = document.getElementById("qrCorner");
+const foto = document.getElementById("foto");
+const qrGrande = document.getElementById("qrGrande");
+const qrMini = document.getElementById("qrMini");
+const textoQR = document.getElementById("textoQR");
+const info = document.getElementById("info");
+const nombreEl = document.getElementById("nombre");
+const mensajeEl = document.getElementById("mensaje");
 
-let slides = [];
+let fotos = [];
 let index = 0;
-let started = false;
+let carruselActivo = false;
 
-/* CARGA FOTOS */
-async function loadPhotos() {
-  const { data } = await supabase.storage.from("evento").list("", {
-    limit: 100,
-    sortBy: { column: "created_at", order: "desc" }
-  });
-
-  const images = (data || []).filter(f =>
-    /\.(jpg|jpeg|png)$/i.test(f.name)
-  );
-
-  if (!images.length) {
-    // NO HAY FOTOS → QR PERMANENTE
-    started = false;
-    carousel.style.display = "none";
-    qrCorner.style.display = "none";
-    qrScreen.style.display = "flex";
-    return;
-  }
-
-  if (!started) {
-    started = true;
-    startCarousel(images);
-  }
+function mostrarQRGrande() {
+  qrGrande.style.opacity = 1;
+  qrMini.style.opacity = 0;
+  textoQR.style.opacity = 0;
+  foto.style.opacity = 0;
+  info.style.opacity = 0;
 }
 
-/* INICIAR CARRUSEL */
-function startCarousel(images) {
-  carousel.innerHTML = "";
-  slides = images.map(f => {
-    const url = supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl;
-
-    const slide = document.createElement("div");
-    slide.className = "slide";
-
-    slide.innerHTML = `
-      <img src="${url}">
-      <div class="infoBox">
-        <h2>${f.name.split("___")[0].replaceAll("_"," ")}</h2>
-        <p>${(f.name.split("___")[1]||"").replaceAll("_"," ")}</p>
-      </div>
-    `;
-    carousel.appendChild(slide);
-    return slide;
-  });
-
-  qrScreen.style.display = "none";
-  carousel.style.display = "block";
-
-  // QR GRANDE 10s AL INICIO
-  setTimeout(() => {
-    qrCorner.style.display = "block";
-    showSlide(0);
-  }, 10000);
+function iniciarCarrusel() {
+  carruselActivo = true;
+  qrGrande.style.opacity = 0;
+  qrMini.style.opacity = 1;
+  textoQR.style.opacity = 1;
+  mostrarFoto();
 }
 
-/* MOSTRAR SLIDE */
-function showSlide(i) {
-  slides.forEach(s => s.classList.remove("active"));
-  slides[i].classList.add("active");
+function mostrarFoto() {
+  const item = fotos[index];
+  foto.src = item.url;
+  nombreEl.textContent = item.nombre || "";
+  mensajeEl.textContent = item.mensaje || "";
+  foto.style.opacity = 1;
+  info.style.opacity = 1;
 
   setTimeout(() => {
-    index = (i + 1) % slides.length;
+    foto.style.opacity = 0;
+    info.style.opacity = 0;
+    index++;
 
-    if (index === 0) {
-      // FIN → QR GRANDE
-      carousel.style.display = "none";
-      qrCorner.style.display = "none";
-      qrScreen.style.display = "flex";
+    if (index >= fotos.length) {
+      carruselActivo = false;
+      index = 0;
+      mostrarQRGrande();
       setTimeout(() => {
-        carousel.style.display = "block";
-        qrCorner.style.display = "block";
-        showSlide(0);
+        if (fotos.length) iniciarCarrusel();
       }, 10000);
     } else {
-      showSlide(index);
+      setTimeout(mostrarFoto, 1000);
     }
   }, 8000);
 }
 
-/* BUSCAR NUEVAS FOTOS */
-setInterval(loadPhotos, 10000);
-loadPhotos();
+async function cargarFotos() {
+  const { data } = await supabase.storage.from("evento").list("", { limit: 100 });
+  const validas = (data || []).filter(f =>
+    /\.(jpg|jpeg|png)$/i.test(f.name)
+  );
+
+  if (!validas.length) {
+    mostrarQRGrande();
+    return;
+  }
+
+  fotos = validas
+    .reverse()
+    .map(f => {
+      const partes = f.name.split("___");
+      return {
+        url: supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl,
+        nombre: partes[0]?.replace(/_/g, " "),
+        mensaje: partes[1]?.replace(/_/g, " ")
+      };
+    });
+
+  if (!carruselActivo) {
+    mostrarQRGrande();
+    setTimeout(iniciarCarrusel, 10000);
+  }
+}
+
+mostrarQRGrande();
+cargarFotos();
+setInterval(cargarFotos, 10000);
 </script>
 
 </body>
