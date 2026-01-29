@@ -4,146 +4,124 @@
 <meta charset="UTF-8">
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
   background: radial-gradient(circle at center, #222 0%, #000 70%);
   font-family: system-ui, sans-serif;
-  overflow: hidden;
-}
-
-#escenario {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  overflow:hidden;
 }
 
 /* LOGO */
 #logo {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 220px;
-  z-index: 10;
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:220px;
+  z-index:10;
 }
 
-/* CONTENEDOR DEL QR + MENSAJE INICIAL */
+/* QR + TEXTO INICIAL */
 #qr-container {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 800px;
-  height: 60%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   transition: all 1s ease;
-  z-index: 5;
-  cursor: pointer;
+  z-index:9;
+  text-align:center;
 }
-
 #qr-container.chico {
-  width: 140px;
-  height: 140px;
-  bottom: 20px;
-  right: 20px;
-  top: auto;
-  left: auto;
-  transform: none;
+  width:120px;
+  height:120px;
+  bottom:20px;
+  right:20px;
+  top:auto;
+  left:auto;
+  transform:none;
 }
-
 #qr-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 16px;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  border-radius:12px;
 }
-
 #qr-texto {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 600;
-  color: #fff;
+  margin-top:12px;
+  color:#fff;
+  font-size:18px;
+  font-weight:600;
   text-shadow: 0 0 8px #000;
 }
 
-/* CONTENEDOR DEL CARRUSEL */
+/* CARRUSEL */
 #carrusel-contenedor {
-  position: absolute;
-  top: 100px;
-  left: 0;
-  right: 0;
-  bottom: 60px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1;
+  position:absolute;
+  top:100px;
+  left:0;
+  right:0;
+  bottom:60px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  z-index:1;
 }
-
 #carrusel {
-  width: 90%;
-  height: 90%;
-  position: relative;
+  width:90%;
+  height:90%;
+  position:relative;
 }
-
 #carrusel img {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 0;
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:0;
   transition: opacity 1s ease;
 }
-
 #carrusel img.activa {
-  opacity: 1;
+  opacity:1;
 }
 
 /* INFO FOTO */
 #info {
-  position: absolute;
-  left: 40px;
-  bottom: 40px;
-  max-width: 40%;
-  padding: 24px;
-  border-radius: 18px;
+  position:absolute;
+  left:40px;
+  bottom:40px;
+  max-width:40%;
+  padding:20px;
+  border-radius:16px;
   background: linear-gradient(135deg, #00ffcc, #0066ff);
-  color: #000;
-  font-size: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,.5);
-  animation: glow 6s infinite alternate;
-}
-
-@keyframes glow {
-  from { filter: hue-rotate(0deg) }
-  to { filter: hue-rotate(60deg) }
+  color:#000;
+  font-size:20px;
+  z-index:2;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
 </style>
 </head>
 
 <body>
-<div id="escenario">
-  <img id="logo" src="logo.png" alt="Logo">
+<img id="logo" src="logo.png" alt="Logo">
 
-  <!-- QR + MENSAJE -->
-  <a id="qr-container" href="https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" target="_blank">
-    <img src="qr.png" alt="QR">
-    <div id="qr-texto">Escanea, subí tu foto y sé parte de la fiesta!</div>
-  </a>
+<a id="qr-container" href="https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" target="_blank">
+  <img src="qr.png" alt="QR">
+  <div id="qr-texto">Escanea, subí tu foto y sé parte de la fiesta!</div>
+</a>
 
-  <div id="carrusel-contenedor">
-    <div id="carrusel"></div>
-    <div id="info"></div>
-  </div>
+<div id="carrusel-contenedor">
+  <div id="carrusel"></div>
+  <div id="info"></div>
 </div>
 
 <script type="module">
@@ -157,19 +135,17 @@ const supabase = createClient(
 const carrusel = document.getElementById("carrusel");
 const info = document.getElementById("info");
 const qrContainer = document.getElementById("qr-container");
+
 let fotos = [];
 let i = 0;
 
 async function cargarFotos() {
-  const { data, error } = await supabase.storage.from("evento").list("", {limit: 100, offset:0});
-  if(error) {
-    console.error("Error cargando fotos:", error);
-    return [];
-  }
-  return data.filter(f => /\.(jpe?g|png)$/i.test(f.name)).sort((a,b) => b.created_at - a.created_at);
+  const { data, error } = await supabase.storage.from("evento").list("", {limit:100, offset:0});
+  if(error) return [];
+  return data.filter(f => /\.(jpe?g|png)$/i.test(f.name)).sort((a,b)=>b.created_at - a.created_at);
 }
 
-function crearImg(f) {
+function crearImg(f){
   const img = document.createElement("img");
   img.src = `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${encodeURIComponent(f.name)}`;
   return img;
@@ -177,11 +153,12 @@ function crearImg(f) {
 
 function mostrarQRGrande() {
   qrContainer.classList.remove("chico");
-  qrContainer.style.transition = "all 1s";
+  qrContainer.querySelector("#qr-texto").textContent = "Escanea, subí tu foto y sé parte de la fiesta!";
 }
 
 function moverQRChico() {
   qrContainer.classList.add("chico");
+  qrContainer.querySelector("#qr-texto").textContent = "Escanea para participar";
 }
 
 async function iniciarCarrusel() {
@@ -196,14 +173,11 @@ async function iniciarCarrusel() {
   info.innerHTML = "";
   i = 0;
 
-  fotos.forEach(f => {
-    const img = crearImg(f);
-    carrusel.appendChild(img);
-  });
+  fotos.forEach(f => carrusel.appendChild(crearImg(f)));
 
-  while(true) {
+  while(true){
     const imagenes = Array.from(carrusel.querySelectorAll("img"));
-    if(imagenes.length === 0) {
+    if(imagenes.length===0){
       mostrarQRGrande();
       await new Promise(r=>setTimeout(r,10000));
       fotos = await cargarFotos();
@@ -211,7 +185,7 @@ async function iniciarCarrusel() {
     }
 
     const img = imagenes[i];
-    imagenes.forEach(im => im.classList.remove("activa"));
+    imagenes.forEach(im=>im.classList.remove("activa"));
     img.classList.add("activa");
 
     // info foto
@@ -221,34 +195,35 @@ async function iniciarCarrusel() {
     info.innerHTML = `<strong>${nombre}</strong><br>${mensaje}`;
 
     await new Promise(r=>setTimeout(r,10000));
-    i = (i+1)%imagenes.length;
+    i++;
 
-    if(i===0) {
-      // vuelta a QR grande
+    if(i>=imagenes.length){
+      // fade out a negro y mostrar QR inicial
+      imagenes.forEach(im=>im.classList.remove("activa"));
+      info.innerHTML = "";
       mostrarQRGrande();
       await new Promise(r=>setTimeout(r,10000));
       fotos = await cargarFotos();
-      if(fotos.length===0) continue;
-      moverQRChico();
+      if(fotos.length>0) moverQRChico();
+      i=0;
     }
   }
 }
 
-// loop inicial
-(async function loop() {
+(async function loop(){
   fotos = await cargarFotos();
-  if(fotos.length===0){
-    mostrarQRGrande();
-  }
+  if(fotos.length===0) mostrarQRGrande();
+
+  // chequeo de nuevas fotos cada 10s
   setInterval(async ()=>{
     const nuevas = await cargarFotos();
     if(nuevas.length>fotos.length) fotos = nuevas;
   },10000);
 
-  await new Promise(r=>setTimeout(r,10000)); // mostrar QR inicial 10s
+  // espera 10s inicial
+  await new Promise(r=>setTimeout(r,10000));
   iniciarCarrusel();
 })();
 </script>
-
 </body>
 </html>
