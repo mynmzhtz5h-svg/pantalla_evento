@@ -1,74 +1,237 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Pantalla Evento</title>
+<meta charset="UTF-8" />
+<title>CRANEOSUY · Pantalla del Evento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+:root {
+  --marca: #ffffff;
+  --cliente: rgba(255,255,255,.75);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  background: black;
-  color: white;
   overflow: hidden;
-  font-family: system-ui;
+  background: #000;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: white;
 }
-#escenario {
-  position: absolute;
+
+/* ===== FONDO ESCÉNICO ===== */
+#fondo {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(120deg, #0f2027, #203a43, #000);
+  background-size: 400% 400%;
+  animation: fondo 25s ease infinite;
+  z-index: 0;
+}
+
+@keyframes fondo {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+#escena {
+  position: fixed;
   inset: 0;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
-img {
-  max-width: 90vw;
-  max-height: 80vh;
+
+/* ===== FOTO ===== */
+#foto {
+  max-width: 88vw;
+  max-height: 88vh;
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.65);
   opacity: 0;
-  transition: opacity 1s;
-  position: absolute;
+  transform: scale(.96);
+  transition: opacity 1.2s ease, transform 1.2s ease;
 }
-img.activa {
+
+#foto.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ===== NUEVA FOTO ===== */
+#badge {
+  position: absolute;
+  top: 6vh;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+  font-size: 18px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all .6s ease;
+}
+
+#badge.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== MARCA ===== */
+#marca {
+  position: fixed;
+  bottom: 4vh;
+  left: 4vw;
+  font-weight: 700;
+  letter-spacing: .08em;
+  opacity: .85;
+}
+
+/* ===== CLIENTE (OPCIONAL) ===== */
+#cliente {
+  position: fixed;
+  bottom: 4vh;
+  right: 4vw;
+  font-size: 14px;
+  opacity: .6;
+}
+
+/* ===== CTA ===== */
+#cta {
+  position: fixed;
+  top: 4vh;
+  right: 4vw;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(8px);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+#cta.visible {
   opacity: 1;
 }
 </style>
 </head>
+
 <body>
 
-<div id="escenario"></div>
+<div id="fondo"></div>
+
+<div id="escena">
+  <img id="foto" />
+  <div id="badge">📸 Nueva foto</div>
+</div>
+
+<div id="marca">CRANEOSUY</div>
+<div id="cliente"></div>
+<div id="cta">📸 Compartí tu foto · Escaneá el QR</div>
 
 <script>
-const cloudName = "craneosuy";
-const jsonURL = "https://mynmzhtz5h-svg.github.io/pantalla-evento/fotos.json";
+/* ========= CONFIGURACIÓN ========= */
+
+// URL REAL DE TU fotos.json (Cloudinary / GitHub / donde esté)
+const URL_FOTOS = "https://mynmzhtz5h-svg.github.io/pantalla-evento/fotos.json";
+
+// Nombre del cliente (dejá "" si no querés mostrar)
+const NOMBRE_CLIENTE = "";
+
+// Tiempo por foto
+const INTERVALO = 6000;
+
+/* ========= ESTADO ========= */
 
 let fotos = [];
-let index = 0;
+let indice = 0;
+let ultimasCantidad = 0;
+
+/* ========= ELEMENTOS ========= */
+
+const img = document.getElementById("foto");
+const badge = document.getElementById("badge");
+const cliente = document.getElementById("cliente");
+const cta = document.getElementById("cta");
+
+/* ========= INIT ========= */
+
+if (NOMBRE_CLIENTE) {
+  cliente.textContent = NOMBRE_CLIENTE;
+}
 
 async function cargarFotos() {
-  const res = await fetch(jsonURL + "?t=" + Date.now());
-  fotos = await res.json();
+  const res = await fetch(URL_FOTOS + "?t=" + Date.now());
+  if (!res.ok) throw new Error("No se pudo obtener fotos");
+  return res.json();
 }
 
-function mostrar() {
-  if (!fotos.length) return;
-
-  const f = fotos[index];
-  const img = document.createElement("img");
-
-  img.src = `https://res.cloudinary.com/${cloudName}/image/upload/${f.public_id}`;
-  img.classList.add("activa");
-
-  const esc = document.getElementById("escenario");
-  esc.innerHTML = "";
-  esc.appendChild(img);
-
-  index = (index + 1) % fotos.length;
+function mostrarFoto(url, esNueva = false) {
+  img.classList.remove("visible");
+  setTimeout(() => {
+    img.src = url;
+    img.onload = () => {
+      img.classList.add("visible");
+      if (esNueva) mostrarBadge();
+    };
+  }, 600);
 }
 
-async function loop() {
-  await cargarFotos();
-  mostrar();
-  setTimeout(loop, 5000);
+function mostrarBadge() {
+  badge.classList.add("visible");
+  setTimeout(() => badge.classList.remove("visible"), 2500);
 }
 
-loop();
+function mostrarCTA(mostrar) {
+  cta.classList.toggle("visible", mostrar);
+}
+
+/* ========= LOOP ========= */
+
+async function iniciar() {
+  try {
+    fotos = await cargarFotos();
+    ultimasCantidad = fotos.length;
+    if (fotos.length === 0) {
+      mostrarCTA(true);
+      return;
+    }
+    mostrarCTA(false);
+    mostrarFoto(fotos[0]);
+    setInterval(rotar, INTERVALO);
+    setInterval(actualizar, 4000);
+  } catch (e) {
+    console.error(e);
+    mostrarCTA(true);
+  }
+}
+
+async function rotar() {
+  if (fotos.length === 0) return;
+  indice = (indice + 1) % fotos.length;
+  mostrarFoto(fotos[indice]);
+}
+
+async function actualizar() {
+  try {
+    const nuevas = await cargarFotos();
+    if (nuevas.length > ultimasCantidad) {
+      fotos = nuevas;
+      ultimasCantidad = nuevas.length;
+      indice = fotos.length - 1;
+      mostrarFoto(fotos[indice], true);
+    }
+  } catch {}
+}
+
+iniciar();
 </script>
 
 </body>
