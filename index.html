@@ -16,7 +16,6 @@ html, body {
   overflow: hidden;
 }
 
-/* CONTENEDOR GENERAL */
 #escenario {
   position: relative;
   width: 100%;
@@ -49,6 +48,7 @@ html, body {
   justify-content: center;
   transition: all 1s ease;
   z-index: 5;
+  cursor: pointer;
 }
 
 #qr img {
@@ -82,7 +82,7 @@ html, body {
   margin: 0;
 }
 
-/* cuando QR es chico, ocultar texto inicial */
+/* ocultar texto inicial cuando QR es chico */
 #qr.chico ~ #qr-inicial-texto {
   opacity: 0;
 }
@@ -150,9 +150,10 @@ html, body {
 
   <img id="logo" src="logo.png" alt="Logo">
 
-  <div id="qr">
+  <!-- QR CLICKEABLE -->
+  <a id="qr" href="https://mynmzhtz5h-svg.github.io/subida-fotos-evento/" target="_blank">
     <img src="qr.png" alt="QR">
-  </div>
+  </a>
 
   <div id="qr-texto">
     SUBÍ TU FOTO<br>Y SÉ PARTE DE LA FIESTA!
