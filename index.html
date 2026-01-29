@@ -14,7 +14,6 @@
     overflow: hidden;
   }
 
-  /* LOGO */
   #branding {
     position: absolute;
     top: 20px;
@@ -27,7 +26,6 @@
     width: 180px;
   }
 
-  /* PANTALLA INICIAL QR */
   #inicio {
     position: absolute;
     inset: 0;
@@ -51,7 +49,6 @@
     font-size: 22px;
   }
 
-  /* ESCENARIO */
   #escenario {
     position: absolute;
     inset: 0;
@@ -72,7 +69,6 @@
     opacity: 1;
   }
 
-  /* TEXTO FOTO */
   #texto {
     position: absolute;
     left: 40px;
@@ -88,7 +84,6 @@
     z-index: 6;
   }
 
-  /* QR CHICO */
   #qr-mini {
     position: absolute;
     bottom: 20px;
@@ -113,13 +108,6 @@
     display: block;
     margin-top: 6px;
   }
-
-  /* BLOQUEO DE PLACEHOLDERS */
-  .emptyFolderPlaceholder,
-  [data-testid="empty-folder"],
-  supabase-empty-folder {
-    display: none !important;
-  }
 </style>
 </head>
 
@@ -135,7 +123,6 @@
 </div>
 
 <div id="escenario"></div>
-
 <div id="texto"></div>
 
 <div id="qr-mini">
@@ -161,12 +148,12 @@ let index = 0;
 let carruselActivo = false;
 
 async function cargarFotos() {
-  const { data } = await supabase
-    .storage
-    .from("evento")
-    .list("", { sortBy: { column: "created_at", order: "desc" } });
+  const { data } = await supabase.storage.from("evento").list("", {
+    sortBy: { column: "created_at", order: "desc" }
+  });
 
-  fotos = data || [];
+  // 🔥 FILTRO REAL: solo archivos válidos
+  fotos = (data || []).filter(f => f.name && f.id);
 }
 
 function mostrarQR() {
@@ -178,7 +165,7 @@ function mostrarQR() {
 }
 
 function mostrarFoto() {
-  if (!fotos.length) {
+  if (fotos.length === 0) {
     mostrarQR();
     return;
   }
@@ -191,7 +178,7 @@ function mostrarFoto() {
 
   const f = fotos[index];
   const img = document.createElement("img");
-  img.src = `${supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl}`;
+  img.src = supabase.storage.from("evento").getPublicUrl(f.name).data.publicUrl;
   img.className = "slide activa";
   escenario.appendChild(img);
 
@@ -208,21 +195,27 @@ function mostrarFoto() {
 async function iniciar() {
   await cargarFotos();
 
-  if (!fotos.length) {
+  if (fotos.length === 0) {
     mostrarQR();
-  } else {
-    mostrarQR();
-    setTimeout(() => {
-      mostrarFoto();
-      setInterval(mostrarFoto, 8000);
-    }, 10000);
+    return;
   }
+
+  mostrarQR();
+
+  setTimeout(() => {
+    mostrarFoto();
+    setInterval(mostrarFoto, 8000);
+  }, 10000);
 }
 
+// Buscar nuevas fotos cada 10s
 setInterval(async () => {
   const antes = fotos.length;
   await cargarFotos();
-  if (!carruselActivo && fotos.length) iniciar();
+
+  if (antes === 0 && fotos.length > 0) {
+    iniciar();
+  }
 }, 10000);
 
 iniciar();
