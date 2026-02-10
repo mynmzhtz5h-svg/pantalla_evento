@@ -13,101 +13,92 @@ html, body {
   font-family: system-ui, sans-serif;
   overflow: hidden;
 }
-  #branding {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    transition: all .6s ease;
-  }
-
-  #branding img {
-    width: 200px;
-    max-width: 300px;
-  }
-
-  #carousel-container {
-    position: absolute;
-    top: 190px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 95%;
-    max-width: 900px;
-    height: 60vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .slide {
-    position: absolute;
-    max-width: 100%;
-    max-height: 100%;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-    object-fit: contain;
-  }
-
-  .slide.activa {
-    opacity: 1;
-  }
-
-  #qr-container {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    transition: all 1s ease;
-    z-index: 5;
-  }
-
-  #qr-container.chico {
-    left: auto;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 120px;
-    height: 120px;
-  }
-
-  #qr-container img {
-    width: 100%;
-    border-radius: 16px;
-  }
-
-  #qr-text {
-    margin-top: 8px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 1px 1px 4px #000;
-  }
-
-  #autor-mensaje {
-    position: absolute;
-    left: 20px;
-    bottom: 50px;
-    max-width: 40%;
-    padding: 12px;
-    border-radius: 14px;
-    font-size: 18px;
-    color: #fff;
-    z-index: 3;
-    display: none;
-  }
-
-  #autor-mensaje span {
-    display: block;
-    font-weight: bold;
-  }
+#branding {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: all .6s ease;
+}
+#branding img {
+  width: 200px;
+  max-width: 300px;
+}
+#carousel-container {
+  position: absolute;
+  top: 190px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: 900px;
+  height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  z-index: 1;
+}
+.slide {
+  position: absolute;
+  max-width: 100%;
+  max-height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  object-fit: contain;
+}
+.slide.activa {
+  opacity: 1;
+}
+#qr-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  transition: all 1s ease;
+  z-index: 5;
+}
+#qr-container.chico {
+  left: auto;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 120px;
+  height: 120px;
+}
+#qr-container img {
+  width: 100%;
+  border-radius: 16px;
+}
+#qr-text {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 4px #000;
+}
+#autor-mensaje {
+  position: absolute;
+  left: 20px;
+  bottom: 50px;
+  max-width: 40%;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 18px;
+  color: #fff;
+  z-index: 3;
+  display: none;
+}
+#autor-mensaje span {
+  display: block;
+  font-weight: bold;
+}
 </style>
 </head>
 
 <body>
+
 <div id="branding">
   <img src="logo.png" alt="Logo">
 </div>
@@ -115,8 +106,9 @@ html, body {
 <div id="carousel-container"></div>
 
 <div id="qr-container">
-  <img src="qr.png" alt="QR">
-  <div id="qr-text">Escanea, subí tu foto y se parte de la fiesta!</div>
+  <!-- QR DINÁMICO CORREGIDO -->
+  <img id="qr-img" alt="QR">
+  <div id="qr-text">Escaneá, subí tu foto y sé parte de la fiesta!</div>
 </div>
 
 <div id="autor-mensaje">
@@ -126,6 +118,13 @@ html, body {
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUBIR_URL = "https://mynmzhtz5h-svg.github.io/pantalla_evento/subir.html";
+
+// generar QR automáticamente (SIEMPRE correcto)
+document.getElementById("qr-img").src =
+  "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" +
+  encodeURIComponent(SUBIR_URL);
 
 const supabase = createClient(
   "https://mjmbvzvirvtsihtyrqqf.supabase.co",
@@ -140,15 +139,14 @@ const nombreAutor = document.getElementById("nombre-autor");
 const mensajeAutor = document.getElementById("mensaje-autor");
 
 let fotos = [];
-let i = 0;
-const duracionFoto = 10000; // 10s
-const fadeDuracion = 1000; // 1s
-const intervaloBusqueda = 10000; // 10s
-const duracionInicial = 10000; // 10s pantalla inicial
+const duracionFoto = 10000;
+const fadeDuracion = 1000;
+const intervaloBusqueda = 10000;
+const duracionInicial = 10000;
 
 async function cargarFotos() {
   try {
-    const { data, error } = await supabase.storage.from("evento").list("", {limit: 100, offset: 0});
+    const { data, error } = await supabase.storage.from("evento").list("", { limit: 100 });
     if (error) throw error;
 
     fotos = data
@@ -157,82 +155,59 @@ async function cargarFotos() {
         name: f.name,
         url: `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${encodeURIComponent(f.name)}`
       }));
-
-  } catch (e) {
-    console.error("Error cargando fotos:", e);
+  } catch {
     fotos = [];
   }
 }
 
 function mostrarQRInicial() {
   qrContainer.classList.remove("chico");
-  qrText.textContent = "Escanea, subí tu foto y se parte de la fiesta!";
+  qrText.textContent = "Escaneá, subí tu foto y sé parte de la fiesta!";
   autorMensaje.style.display = "none";
   carouselContainer.innerHTML = "";
 }
 
 function moverQRChico() {
   qrContainer.classList.add("chico");
-  qrText.textContent = "Escanea para participar";
+  qrText.textContent = "Escaneá para participar";
 }
 
 async function iniciarCarrusel() {
   await cargarFotos();
-
   if (!fotos.length) {
     mostrarQRInicial();
     return;
   }
 
-  // fade out QR inicial
   qrContainer.style.opacity = 0;
   await new Promise(r => setTimeout(r, fadeDuracion));
-  carouselContainer.innerHTML = "";
   qrContainer.style.opacity = 1;
-
   moverQRChico();
 
-  for (i = 0; i < fotos.length; i++) {
+  for (const foto of fotos) {
     carouselContainer.innerHTML = "";
-
     const img = document.createElement("img");
-    img.src = fotos[i].url;
+    img.src = foto.url;
     img.className = "slide activa";
     carouselContainer.appendChild(img);
 
-    // mostrar autor y mensaje, respetando espacios
-    const partes = fotos[i].name.split("___");
-    nombreAutor.textContent = partes[0]?.replace(/_/g," "); 
-    mensajeAutor.textContent = partes[1]?.replace(/_/g," "); 
+    const partes = foto.name.split("___");
+    nombreAutor.textContent = partes[0]?.replace(/_/g, " ");
+    mensajeAutor.textContent = partes[1]?.replace(/_/g, " ");
     autorMensaje.style.display = "block";
-    autorMensaje.style.background = `hsl(${Math.random()*360}, 60%, 30%)`;
+    autorMensaje.style.background = `hsl(${Math.random()*360},60%,30%)`;
 
     await new Promise(r => setTimeout(r, duracionFoto));
   }
 
-  // fade out ultima foto
   carouselContainer.innerHTML = "";
   autorMensaje.style.display = "none";
-
-  // QR inicial fade in
   mostrarQRInicial();
-  await new Promise(r => setTimeout(r, duracionInicial));
 }
 
-async function loop() {
-  mostrarQRInicial();
-  await new Promise(r => setTimeout(r, duracionInicial));
-  while (true) {
-    await iniciarCarrusel();
-    await new Promise(r => setTimeout(r, duracionInicial));
-    await cargarFotos();
-  }
-}
-
-// búsqueda automática de nuevas fotos
 setInterval(cargarFotos, intervaloBusqueda);
-
-loop();
+mostrarQRInicial();
 </script>
+
 </body>
 </html>
