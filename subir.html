@@ -16,7 +16,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .card {
       background: #0e0e0e;
       padding: 28px;
@@ -26,17 +25,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,.7);
       text-align: center;
     }
-
-    img {
-      width: 180px;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      font-size: 22px;
-      margin-bottom: 14px;
-    }
-
+    img { width: 180px; margin-bottom: 16px; }
+    h1 { font-size: 22px; margin-bottom: 14px; }
     input, textarea, button {
       width: 100%;
       margin-top: 12px;
@@ -44,40 +34,21 @@
       border-radius: 12px;
       border: none;
       font-size: 16px;
-      box-sizing: border-box;
     }
-
-    input, textarea {
-      background: #1a1a1a;
-      color: #fff;
-    }
-
-    textarea {
-      resize: none;
-      height: 80px;
-    }
-
+    input, textarea { background: #1a1a1a; color: #fff; }
+    textarea { resize: none; height: 80px; }
     button {
       background: linear-gradient(135deg, #00c853, #2979ff);
       color: #fff;
       font-weight: 700;
       cursor: pointer;
     }
-
-    button:disabled {
-      opacity: .5;
-    }
-
-    .estado {
-      margin-top: 14px;
-      min-height: 20px;
-      font-size: 15px;
-    }
+    button:disabled { opacity: .5; }
+    .estado { margin-top: 14px; min-height: 20px; }
   </style>
 </head>
 
 <body>
-
 <div class="card">
   <img src="logo.png" alt="Logo">
   <h1>Subí tu foto al evento 📸</h1>
@@ -90,88 +61,56 @@
   <div class="estado" id="estado"></div>
 </div>
 
-<script src="config.js"></script>
-
 <script>
-const BASE = "/pantalla_evento";
+const CLOUD_NAME = "craneosuy";
+const UPLOAD_PRESET = "evento_unsigned";
 
-const carousel = document.getElementById("carousel-container");
-const qr = document.getElementById("qr-container");
-const qrText = document.getElementById("qr-text");
-const autor = document.getElementById("autor-mensaje");
-const nombreAutor = document.getElementById("nombre-autor");
-const mensajeAutor = document.getElementById("mensaje-autor");
+const btn = document.getElementById("btn");
+const estado = document.getElementById("estado");
 
-const DURACION_FOTO = 10000;
-const DURACION_QR = 10000;
+function limpiar(t, nombre=false) {
+  if (!t.trim()) return nombre ? "anonimo" : "";
+  return t.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 _-]/g, "")
+    .trim();
+}
 
-let fotos = [];
+btn.onclick = async () => {
+  const file = foto.files[0];
+  if (!file || !nombre.value.trim()) {
+    estado.textContent = "⚠️ Foto y nombre obligatorios";
+    return;
+  }
 
-async function cargarFotos() {
+  btn.disabled = true;
+  estado.textContent = "Subiendo foto… ⏳";
+
+  const n = limpiar(nombre.value, true);
+  const m = limpiar(mensaje.value);
+  const publicId = `${n}___${m}___${Date.now()}`;
+
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", UPLOAD_PRESET);
+  fd.append("public_id", publicId);
+  fd.append("folder", "evento-qr");
+
   try {
-    const res = await fetch(`${BASE}/fotos.json?${Date.now()}`);
-    fotos = await res.json();
-  } catch (e) {
-    console.error("No se pudo cargar fotos.json", e);
-    fotos = [];
-  }
-}
+    await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: fd
+    });
 
-function mostrarQRGrande() {
-  carousel.innerHTML = "";
-  autor.style.display = "none";
-  qr.classList.remove("chico");
-  qr.style.opacity = 1;
-  qrText.textContent = "Escaneá, subí tu foto y sé parte de la fiesta 🎉";
-}
-
-function mostrarQRChico() {
-  qr.classList.add("chico");
-  qrText.textContent = "Escaneá para participar";
-}
-
-async function mostrarCarrusel() {
-  mostrarQRChico();
-
-  for (const foto of fotos) {
-    carousel.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.src = foto.img;   // ya viene con URL absoluta
-    img.className = "slide activa";
-    carousel.appendChild(img);
-
-    nombreAutor.textContent = foto.nombre || "";
-    mensajeAutor.textContent = foto.mensaje || "";
-    autor.style.display = "block";
-    autor.style.background = `hsl(${Math.random()*360},60%,30%)`;
-
-    await new Promise(r => setTimeout(r, DURACION_FOTO));
+    estado.textContent = "✅ Tu foto se subió con éxito. ¡Mirá la pantalla!";
+    foto.value = "";
+    mensaje.value = "";
+  } catch {
+    estado.textContent = "❌ Error al subir la foto";
   }
 
-  carousel.innerHTML = "";
-  autor.style.display = "none";
-}
-
-async function loopPrincipal() {
-  while (true) {
-    mostrarQRGrande();
-    await new Promise(r => setTimeout(r, DURACION_QR));
-
-    await cargarFotos();
-
-    if (fotos.length > 0) {
-      await mostrarCarrusel();
-    }
-
-    mostrarQRGrande();
-    await new Promise(r => setTimeout(r, DURACION_QR));
-  }
-}
-
-loopPrincipal();
+  btn.disabled = false;
+};
 </script>
-
-
 </body>
 </html>
