@@ -97,9 +97,7 @@ const btn = document.getElementById("btn");
 const estado = document.getElementById("estado");
 
 function limpiarTexto(texto, esNombre = false) {
-  if (!texto.trim()) {
-    return esNombre ? "anonimo" : "";
-  }
+  if (!texto.trim()) return esNombre ? "anonimo" : "";
   return texto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -128,62 +126,67 @@ btn.onclick = async () => {
   const fileName = `${nombre}___${mensaje}___${Date.now()}.${ext}`;
 
   try {
-    // convertir a base64
+    // convertir imagen a base64
     const base64 = await new Promise(res => {
       const r = new FileReader();
       r.onload = () => res(r.result.split(",")[1]);
       r.readAsDataURL(file);
     });
 
-    // subir imagen
-    await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`, {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${CONFIG.token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "subida foto",
-        content: base64,
-        branch: CONFIG.branch
-      })
-    });
+    // 1️⃣ subir imagen
+    const uploadResp = await fetch(
+      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${CONFIG.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "subida foto evento",
+          content: base64,
+          branch: CONFIG.branch
+        })
+      }
+    );
 
-    // leer fotos.json
+    if (!uploadResp.ok) throw new Error("Error subiendo imagen");
+
+    // 2️⃣ leer fotos.json actual
     const fotosResp = await fetch(
       `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
     );
-    const fotos = await fotosResp.json();
+    const fotos = fotosResp.ok ? await fotosResp.json() : [];
 
-    fotos.unshift({
-      img: `https://${CONFIG.owner}.github.io/${CONFIG.repo}/fotos/${fileName}`,
-      nombre,
-      mensaje
-    });
+    // agregar nueva foto al inicio
+    fotos.unshift(fileName);
 
-    // obtener SHA actual
+    // 3️⃣ obtener SHA actual
     const shaResp = await fetch(
       `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
       { headers: { "Authorization": `token ${CONFIG.token}` } }
     );
     const shaData = await shaResp.json();
 
-    // subir fotos.json actualizado
-    await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`, {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${CONFIG.token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "update fotos",
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(fotos, null, 2)))),
-        sha: shaData.sha,
-        branch: CONFIG.branch
-      })
-    });
+    // 4️⃣ subir fotos.json actualizado
+    await fetch(
+      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${CONFIG.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "update fotos evento",
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(fotos, null, 2)))),
+          sha: shaData.sha,
+          branch: CONFIG.branch
+        })
+      }
+    );
 
-    estado.textContent = "✅ Foto subida correctamente, Mirá la pantalla!";
+    estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
     fileInput.value = "";
     document.getElementById("mensaje").value = "";
 
