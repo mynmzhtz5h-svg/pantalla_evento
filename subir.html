@@ -93,114 +93,85 @@
 <script src="config.js"></script>
 
 <script>
-const btn = document.getElementById("btn");
-const estado = document.getElementById("estado");
+const BASE = "/pantalla_evento";
 
-function limpiarTexto(texto, esNombre = false) {
-  if (!texto.trim()) return esNombre ? "anonimo" : "";
-  return texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9ñÑ _-]/g, "")
-    .trim();
-}
+const carousel = document.getElementById("carousel-container");
+const qr = document.getElementById("qr-container");
+const qrText = document.getElementById("qr-text");
+const autor = document.getElementById("autor-mensaje");
+const nombreAutor = document.getElementById("nombre-autor");
+const mensajeAutor = document.getElementById("mensaje-autor");
 
-btn.onclick = async () => {
-  const fileInput = document.getElementById("foto");
-  const nombreRaw = document.getElementById("nombre").value;
-  const mensajeRaw = document.getElementById("mensaje").value;
+const DURACION_FOTO = 10000;
+const DURACION_QR = 10000;
 
-  if (!fileInput.files.length || !nombreRaw.trim()) {
-    estado.textContent = "⚠️ Foto y nombre obligatorios";
-    return;
-  }
+let fotos = [];
 
-  btn.disabled = true;
-  estado.textContent = "Subiendo foto… ⏳";
-
-  const file = fileInput.files[0];
-  const nombre = limpiarTexto(nombreRaw, true);
-  const mensaje = limpiarTexto(mensajeRaw, false);
-  const ext = file.name.split(".").pop().toLowerCase();
-
-  const fileName = `${nombre}___${mensaje}___${Date.now()}.${ext}`;
-
+async function cargarFotos() {
   try {
-    // convertir imagen a base64
-    const base64 = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(",")[1]);
-      r.readAsDataURL(file);
-    });
-
-    // 1️⃣ subir imagen
-const uploadResp = await fetch(
-  `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
-  {
-    method: "PUT",
-    headers: {
-      "Authorization": `token ${CONFIG.token}`,
-      "Accept": "application/vnd.github+json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      message: "subida foto evento",
-      content: base64
-    })
-  }
-);
-
-if (!uploadResp.ok) {
-  const err = await uploadResp.text();
-  console.error("Respuesta GitHub:", err);
-  throw new Error("Error subiendo imagen");
-}
-    // 2️⃣ leer fotos.json actual
-    const fotosResp = await fetch(
-      `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
-    );
-    const fotos = fotosResp.ok ? await fotosResp.json() : [];
-
-    // agregar nueva foto al inicio
-    fotos.unshift(fileName);
-
-    // 3️⃣ obtener SHA actual
-    const shaResp = await fetch(
-      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
-      { headers: { "Authorization": `token ${CONFIG.token}` } }
-    );
-    const shaData = await shaResp.json();
-
-    // 4️⃣ subir fotos.json actualizado
-    await fetch(
-      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": `token ${CONFIG.token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: "update fotos evento",
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(fotos, null, 2)))),
-          sha: shaData.sha,
-          branch: CONFIG.branch
-        })
-      }
-    );
-
-    estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
-    fileInput.value = "";
-    document.getElementById("mensaje").value = "";
-
+    const res = await fetch(`${BASE}/fotos.json?${Date.now()}`);
+    fotos = await res.json();
   } catch (e) {
-    console.error(e);
-    estado.textContent = "❌ Error al subir la foto";
+    console.error("No se pudo cargar fotos.json", e);
+    fotos = [];
+  }
+}
+
+function mostrarQRGrande() {
+  carousel.innerHTML = "";
+  autor.style.display = "none";
+  qr.classList.remove("chico");
+  qr.style.opacity = 1;
+  qrText.textContent = "Escaneá, subí tu foto y sé parte de la fiesta 🎉";
+}
+
+function mostrarQRChico() {
+  qr.classList.add("chico");
+  qrText.textContent = "Escaneá para participar";
+}
+
+async function mostrarCarrusel() {
+  mostrarQRChico();
+
+  for (const foto of fotos) {
+    carousel.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = foto.img;   // ya viene con URL absoluta
+    img.className = "slide activa";
+    carousel.appendChild(img);
+
+    nombreAutor.textContent = foto.nombre || "";
+    mensajeAutor.textContent = foto.mensaje || "";
+    autor.style.display = "block";
+    autor.style.background = `hsl(${Math.random()*360},60%,30%)`;
+
+    await new Promise(r => setTimeout(r, DURACION_FOTO));
   }
 
-  btn.disabled = false;
-};
+  carousel.innerHTML = "";
+  autor.style.display = "none";
+}
+
+async function loopPrincipal() {
+  while (true) {
+    mostrarQRGrande();
+    await new Promise(r => setTimeout(r, DURACION_QR));
+
+    await cargarFotos();
+
+    if (fotos.length > 0) {
+      await mostrarCarrusel();
+    }
+
+    mostrarQRGrande();
+    await new Promise(r => setTimeout(r, DURACION_QR));
+  }
+}
+
+loopPrincipal();
 </script>
+
 
 </body>
 </html>
