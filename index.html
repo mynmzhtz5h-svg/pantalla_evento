@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 html, body {
   margin: 0;
@@ -13,6 +14,7 @@ html, body {
   font-family: system-ui, sans-serif;
   overflow: hidden;
 }
+
 #branding {
   position: absolute;
   top: 20px;
@@ -21,10 +23,12 @@ html, body {
   z-index: 10;
   transition: all .6s ease;
 }
+
 #branding img {
   width: 200px;
   max-width: 300px;
 }
+
 #carousel-container {
   position: absolute;
   top: 190px;
@@ -39,6 +43,7 @@ html, body {
   overflow: hidden;
   z-index: 1;
 }
+
 .slide {
   position: absolute;
   max-width: 100%;
@@ -47,9 +52,11 @@ html, body {
   transition: opacity 1s ease-in-out;
   object-fit: contain;
 }
+
 .slide.activa {
   opacity: 1;
 }
+
 #qr-container {
   position: absolute;
   left: 50%;
@@ -59,6 +66,7 @@ html, body {
   transition: all 1s ease;
   z-index: 5;
 }
+
 #qr-container.chico {
   left: auto;
   right: 20px;
@@ -67,10 +75,12 @@ html, body {
   width: 120px;
   height: 120px;
 }
+
 #qr-container img {
   width: 100%;
   border-radius: 16px;
 }
+
 #qr-text {
   margin-top: 8px;
   font-size: 18px;
@@ -78,6 +88,7 @@ html, body {
   color: #fff;
   text-shadow: 1px 1px 4px #000;
 }
+
 #autor-mensaje {
   position: absolute;
   left: 20px;
@@ -90,6 +101,7 @@ html, body {
   z-index: 3;
   display: none;
 }
+
 #autor-mensaje span {
   display: block;
   font-weight: bold;
@@ -106,9 +118,8 @@ html, body {
 <div id="carousel-container"></div>
 
 <div id="qr-container">
-  <!-- QR DINÁMICO CORREGIDO -->
-  <img id="qr-img" alt="QR">
-  <div id="qr-text">Escaneá, subí tu foto y sé parte de la fiesta!</div>
+  <img src="qr.png" alt="QR">
+  <div id="qr-text">Escaneá y subí tu foto 📸</div>
 </div>
 
 <div id="autor-mensaje">
@@ -116,97 +127,79 @@ html, body {
   <span id="mensaje-autor"></span>
 </div>
 
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUBIR_URL = "https://mynmzhtz5h-svg.github.io/pantalla_evento/subir.html";
-
-// generar QR automáticamente (SIEMPRE correcto)
-document.getElementById("qr-img").src =
-  "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" +
-  encodeURIComponent(SUBIR_URL);
-
-const supabase = createClient(
-  "https://mjmbvzvirvtsihtyrqqf.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qbWJ2enZpcnZ0c2lodHlycXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDk2ODUsImV4cCI6MjA4NTIyNTY4NX0.ZHo3Tsi2GwJFvW3iwOKBQ6c_6KhHx2Ju8wUrU223zkU"
-);
-
-const carouselContainer = document.getElementById("carousel-container");
-const qrContainer = document.getElementById("qr-container");
-const qrText = document.getElementById("qr-text");
-const autorMensaje = document.getElementById("autor-mensaje");
+<script>
+const carousel = document.getElementById("carousel-container");
+const qr = document.getElementById("qr-container");
+const autorBox = document.getElementById("autor-mensaje");
 const nombreAutor = document.getElementById("nombre-autor");
 const mensajeAutor = document.getElementById("mensaje-autor");
 
 let fotos = [];
-const duracionFoto = 10000;
-const fadeDuracion = 1000;
-const intervaloBusqueda = 10000;
-const duracionInicial = 10000;
+let index = 0;
+
+const DURACION_FOTO = 5000;
+const DURACION_QR = 8000;
 
 async function cargarFotos() {
   try {
-    const { data, error } = await supabase.storage.from("evento").list("", { limit: 100 });
-    if (error) throw error;
-
-    fotos = data
-      .filter(f => /\.(jpe?g|png)$/i.test(f.name))
-      .map(f => ({
-        name: f.name,
-        url: `https://mjmbvzvirvtsihtyrqqf.supabase.co/storage/v1/object/public/evento/${encodeURIComponent(f.name)}`
-      }));
+    const res = await fetch("fotos.json?_=" + Date.now());
+    fotos = await res.json();
   } catch {
     fotos = [];
   }
 }
 
-function mostrarQRInicial() {
-  qrContainer.classList.remove("chico");
-  qrText.textContent = "Escaneá, subí tu foto y sé parte de la fiesta!";
-  autorMensaje.style.display = "none";
-  carouselContainer.innerHTML = "";
+function mostrarQRGrande() {
+  qr.classList.remove("chico");
+  autorBox.style.display = "none";
+  carousel.innerHTML = "";
 }
 
 function moverQRChico() {
-  qrContainer.classList.add("chico");
-  qrText.textContent = "Escaneá para participar";
+  qr.classList.add("chico");
 }
 
-async function iniciarCarrusel() {
-  await cargarFotos();
+async function mostrarCarrusel() {
   if (!fotos.length) {
-    mostrarQRInicial();
+    mostrarQRGrande();
     return;
   }
 
-  qrContainer.style.opacity = 0;
-  await new Promise(r => setTimeout(r, fadeDuracion));
-  qrContainer.style.opacity = 1;
   moverQRChico();
 
-  for (const foto of fotos) {
-    carouselContainer.innerHTML = "";
-    const img = document.createElement("img");
-    img.src = foto.url;
-    img.className = "slide activa";
-    carouselContainer.appendChild(img);
+  const nombreArchivo = fotos[index];
+  const partes = nombreArchivo.split("___");
 
-    const partes = foto.name.split("___");
-    nombreAutor.textContent = partes[0]?.replace(/_/g, " ");
-    mensajeAutor.textContent = partes[1]?.replace(/_/g, " ");
-    autorMensaje.style.display = "block";
-    autorMensaje.style.background = `hsl(${Math.random()*360},60%,30%)`;
+  const img = document.createElement("img");
+  img.src = `fotos/${nombreArchivo}`;
+  img.className = "slide activa";
 
-    await new Promise(r => setTimeout(r, duracionFoto));
-  }
+  carousel.innerHTML = "";
+  carousel.appendChild(img);
 
-  carouselContainer.innerHTML = "";
-  autorMensaje.style.display = "none";
-  mostrarQRInicial();
+  nombreAutor.textContent = partes[0]?.replace(/_/g, " ");
+  mensajeAutor.textContent = partes[1]?.replace(/_/g, " ");
+  autorBox.style.display = "block";
+  autorBox.style.background = `hsl(${Math.random()*360},60%,30%)`;
+
+  index = (index + 1) % fotos.length;
 }
 
-setInterval(cargarFotos, intervaloBusqueda);
-mostrarQRInicial();
+async function loop() {
+  while (true) {
+    await cargarFotos();
+
+    if (!fotos.length) {
+      mostrarQRGrande();
+      await new Promise(r => setTimeout(r, DURACION_QR));
+    } else {
+      await mostrarCarrusel();
+      await new Promise(r => setTimeout(r, DURACION_FOTO));
+    }
+  }
+}
+
+loop();
 </script>
 
 </body>
