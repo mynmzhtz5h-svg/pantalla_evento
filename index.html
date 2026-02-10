@@ -5,7 +5,9 @@
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{
+html,
+  
+body{
   margin:0;height:100%;
   background:radial-gradient(circle,#222,#000);
   font-family:system-ui;
@@ -53,52 +55,67 @@ html,body{
 </div>
 
 <script>
-const CLOUD="craneosuy";
-const LIST_URL=`https://res.cloudinary.com/${CLOUD}/image/list/evento-qr.json`;
+const CLOUD = "craneosuy";
+const LIST_URL = `https://res.cloudinary.com/${CLOUD}/image/list/evento-qr.json`;
 
-let fotos=[], idx=0;
+// 🔧 REFERENCIAS QUE FALTABAN
+const qr = document.getElementById("qr");
+const autor = document.getElementById("autor");
+const carousel = document.getElementById("carousel");
+const nombre = document.getElementById("nombre");
+const mensaje = document.getElementById("mensaje");
 
-async function cargar(){
-  try{
-    const r=await fetch(LIST_URL+"?"+Date.now());
-    const j=await r.json();
-    fotos=j.resources.reverse();
-  }catch{fotos=[]}
+let fotos = [];
+let idx = 0;
+
+async function cargar() {
+  try {
+    const r = await fetch(LIST_URL + "?" + Date.now());
+    const j = await r.json();
+    fotos = j.resources.reverse();
+  } catch {
+    fotos = [];
+  }
 }
 
-async function loop(){
+async function loop() {
   await cargar();
-  if(!fotos.length){
+
+  if (!fotos.length) {
     qr.classList.remove("chico");
-    autor.style.display="none";
-    setTimeout(loop,10000);
+    autor.style.display = "none";
+    carousel.innerHTML = "";
+    setTimeout(loop, 10000);
     return;
   }
 
   qr.classList.add("chico");
 
-  for(const f of fotos){
-    carousel.innerHTML="";
-    const img=document.createElement("img");
-    img.src=f.secure_url;
-    img.className="slide activa";
+  for (const f of fotos) {
+    carousel.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = f.secure_url;
+    img.className = "slide activa";
     carousel.appendChild(img);
 
-    const p=f.public_id.split("___");
-    nombre.textContent=p[0];
-    mensaje.textContent=p[1];
-    autor.style.display="block";
+    const p = f.public_id.split("___");
+    nombre.textContent = p[0] || "";
+    mensaje.textContent = p[1] || "";
+    autor.style.display = "block";
 
-    await new Promise(r=>setTimeout(r,5000));
+    await new Promise(r => setTimeout(r, 5000));
   }
 
-  carousel.innerHTML="";
-  autor.style.display="none";
+  carousel.innerHTML = "";
+  autor.style.display = "none";
   qr.classList.remove("chico");
-  setTimeout(loop,10000);
+
+  setTimeout(loop, 10000);
 }
 
 loop();
 </script>
+
 </body>
 </html>
