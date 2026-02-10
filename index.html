@@ -4,210 +4,93 @@
 <meta charset="UTF-8">
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center, #222 0%, #000 70%);
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
+html,body{
+  margin:0;height:100%;
+  background:radial-gradient(circle,#222,#000);
+  font-family:system-ui;
+  overflow:hidden;
 }
+#branding{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10}
+#branding img{width:200px}
 
-#branding {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  transition: all .6s ease;
-}
+#carousel{position:absolute;top:180px;left:50%;transform:translateX(-50%);
+  width:90%;height:60vh;display:flex;justify-content:center;align-items:center}
 
-#branding img {
-  width: 200px;
-  max-width: 300px;
-}
+.slide{max-width:100%;max-height:100%;opacity:0;transition:opacity 1s}
+.slide.activa{opacity:1}
 
-#carousel-container {
-  position: absolute;
-  top: 190px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 95%;
-  max-width: 900px;
-  height: 60vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  z-index: 1;
-}
+#qr{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  text-align:center;transition:all 1s;z-index:5}
+#qr.chico{left:auto;right:20px;top:50%;transform:translateY(-50%);width:120px}
+#qr img{width:100%;border-radius:16px}
 
-.slide {
-  position: absolute;
-  max-width: 100%;
-  max-height: 100%;
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
-  object-fit: contain;
-}
-
-.slide.activa {
-  opacity: 1;
-}
-
-#qr-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  transition: all 1s ease;
-  z-index: 5;
-}
-
-#qr-container.chico {
-  left: auto;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 120px;
-  height: 120px;
-}
-
-#qr-container img {
-  width: 60%;
-  border-radius: 16px;
-}
-
-#qr-text {
-  margin-top: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 1px 1px 4px #000;
-}
-
-#autor-mensaje {
-  position: absolute;
-  left: 20px;
-  bottom: 50px;
-  max-width: 40%;
-  padding: 12px;
-  border-radius: 14px;
-  font-size: 18px;
-  color: #fff;
-  z-index: 3;
-  display: none;
-}
-
-#autor-mensaje span {
-  display: block;
-  font-weight: bold;
-}
+#autor{position:absolute;bottom:40px;left:20px;color:#fff;display:none}
+#autor span{display:block;font-size:18px}
 </style>
 </head>
 
 <body>
+<div id="branding"><img src="logo.png"></div>
+<div id="carousel"></div>
 
-<div id="branding">
-  <img src="logo.png" alt="Logo">
+<div id="qr">
+  <img src="qr.png">
+  <div>Escaneá y subí tu foto 📸</div>
 </div>
 
-<div id="carousel-container"></div>
-
-<div id="qr-container">
-  <img src="qr.png" alt="QR">
-  <div id="qr-text">Escaneá y subí tu foto 📸</div>
-</div>
-
-<div id="autor-mensaje">
-  <span id="nombre-autor"></span>
-  <span id="mensaje-autor"></span>
+<div id="autor">
+  <span id="nombre"></span>
+  <span id="mensaje"></span>
 </div>
 
 <script>
-const carousel = document.getElementById("carousel-container");
-const qr = document.getElementById("qr-container");
-const qrText = document.getElementById("qr-text");
-const autor = document.getElementById("autor-mensaje");
-const nombreAutor = document.getElementById("nombre-autor");
-const mensajeAutor = document.getElementById("mensaje-autor");
+const CLOUD="craneosuy";
+const LIST_URL=`https://res.cloudinary.com/${CLOUD}/image/list/evento-qr.json`;
 
-const DURACION_FOTO = 10000;
-const DURACION_QR = 10000;
+let fotos=[], idx=0;
 
-let fotos = [];
+async function cargar(){
+  try{
+    const r=await fetch(LIST_URL+"?"+Date.now());
+    const j=await r.json();
+    fotos=j.resources.reverse();
+  }catch{fotos=[]}
+}
 
-/* ===================== */
-async function cargarFotos() {
-  try {
-    const res = await fetch(`fotos.json?${Date.now()}`);
-    fotos = await res.json();
-  } catch {
-    fotos = [];
+async function loop(){
+  await cargar();
+  if(!fotos.length){
+    qr.classList.remove("chico");
+    autor.style.display="none";
+    setTimeout(loop,10000);
+    return;
   }
-}
 
-/* ===================== */
-function mostrarQRGrande() {
-  carousel.innerHTML = "";
-  autor.style.display = "none";
-  qr.classList.remove("chico");
-  qr.style.opacity = 1;
-  qrText.textContent = "Escaneá, subí tu foto y sé parte de la fiesta 🎉";
-}
-
-/* ===================== */
-function mostrarQRChico() {
   qr.classList.add("chico");
-  qrText.textContent = "Escaneá para participar";
-}
 
-/* ===================== */
-async function mostrarCarrusel() {
-  mostrarQRChico();
-
-  for (const foto of fotos) {
-    carousel.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.src = foto.img;
-    img.className = "slide activa";
+  for(const f of fotos){
+    carousel.innerHTML="";
+    const img=document.createElement("img");
+    img.src=f.secure_url;
+    img.className="slide activa";
     carousel.appendChild(img);
 
-    nombreAutor.textContent = foto.nombre;
-    mensajeAutor.textContent = foto.mensaje || "";
-    autor.style.display = "block";
-    autor.style.background = `hsl(${Math.random()*360},60%,30%)`;
+    const p=f.public_id.split("___");
+    nombre.textContent=p[0];
+    mensaje.textContent=p[1];
+    autor.style.display="block";
 
-    await new Promise(r => setTimeout(r, DURACION_FOTO));
+    await new Promise(r=>setTimeout(r,5000));
   }
 
-  carousel.innerHTML = "";
-  autor.style.display = "none";
+  carousel.innerHTML="";
+  autor.style.display="none";
+  qr.classList.remove("chico");
+  setTimeout(loop,10000);
 }
 
-/* ===================== */
-async function loopPrincipal() {
-  while (true) {
-    mostrarQRGrande();
-    await new Promise(r => setTimeout(r, DURACION_QR));
-
-    await cargarFotos();
-
-    if (fotos.length) {
-      await mostrarCarrusel();
-    }
-
-    mostrarQRGrande();
-    await new Promise(r => setTimeout(r, DURACION_QR));
-  }
-}
-
-loopPrincipal();
+loop();
 </script>
-
 </body>
 </html>
