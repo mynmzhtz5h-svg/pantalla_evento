@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Subí tu foto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #111, #000);
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: #0e0e0e;
+      padding: 28px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7);
+      text-align: center;
+    }
+
+    img {
+      width: 180px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input, textarea {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    textarea {
+      resize: none;
+      height: 80px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00c853, #2979ff);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+    }
+
+    .estado {
+      margin-top: 14px;
+      min-height: 20px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <img src="logo.png" alt="Logo">
+  <h1>Subí tu foto al evento 📸</h1>
+
+  <input type="file" id="foto" accept="image/*">
+  <input type="text" id="nombre" placeholder="Tu nombre">
+  <textarea id="mensaje" placeholder="Mensaje (opcional)"></textarea>
+
+  <button id="btn">Subir foto</button>
+  <div class="estado" id="estado"></div>
+</div>
+
+<script src="config.js"></script>
+
+<script>
+const btn = document.getElementById("btn");
+const estado = document.getElementById("estado");
+
+function limpiarTexto(texto, esNombre = false) {
+  if (!texto.trim()) {
+    return esNombre ? "anonimo" : "";
+  }
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9ñÑ _-]/g, "")
+    .trim();
+}
+
+btn.onclick = async () => {
+  const fileInput = document.getElementById("foto");
+  const nombreRaw = document.getElementById("nombre").value;
+  const mensajeRaw = document.getElementById("mensaje").value;
+
+  if (!fileInput.files.length || !nombreRaw.trim()) {
+    estado.textContent = "⚠️ Foto y nombre obligatorios";
+    return;
+  }
+
+  btn.disabled = true;
+  estado.textContent = "Subiendo foto… ⏳";
+
+  const file = fileInput.files[0];
+  const nombre = limpiarTexto(nombreRaw, true);
+  const mensaje = limpiarTexto(mensajeRaw, false);
+  const ext = file.name.split(".").pop().toLowerCase();
+
+  const fileName = `${nombre}___${mensaje}___${Date.now()}.${ext}`;
+
+  try {
+    // convertir a base64
+    const base64 = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(",")[1]);
+      r.readAsDataURL(file);
+    });
+
+    // subir imagen
+    await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${CONFIG.token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "subida foto",
+        content: base64,
+        branch: CONFIG.branch
+      })
+    });
+
+    // leer fotos.json
+    const fotosResp = await fetch(
+      `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
+    );
+    const fotos = await fotosResp.json();
+
+    fotos.unshift({
+      img: `https://${CONFIG.owner}.github.io/${CONFIG.repo}/fotos/${fileName}`,
+      nombre,
+      mensaje
+    });
+
+    // obtener SHA actual
+    const shaResp = await fetch(
+      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
+      { headers: { "Authorization": `token ${CONFIG.token}` } }
+    );
+    const shaData = await shaResp.json();
+
+    // subir fotos.json actualizado
+    await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${CONFIG.token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "update fotos",
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(fotos, null, 2)))),
+        sha: shaData.sha,
+        branch: CONFIG.branch
+      })
+    });
+
+    estado.textContent = "✅ Foto subida correctamente, Mirá la pantalla!";
+    fileInput.value = "";
+    document.getElementById("mensaje").value = "";
+
+  } catch (e) {
+    console.error(e);
+    estado.textContent = "❌ Error al subir la foto";
+  }
+
+  btn.disabled = false;
+};
+</script>
+
+</body>
+</html>
