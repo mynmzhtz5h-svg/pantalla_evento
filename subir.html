@@ -134,24 +134,27 @@ btn.onclick = async () => {
     });
 
     // 1️⃣ subir imagen
-    const uploadResp = await fetch(
-      `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": `token ${CONFIG.token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: "subida foto evento",
-          content: base64,
-          branch: CONFIG.branch
-        })
-      }
-    );
+const uploadResp = await fetch(
+  `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
+  {
+    method: "PUT",
+    headers: {
+      "Authorization": `token ${CONFIG.token}`,
+      "Accept": "application/vnd.github+json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: "subida foto evento",
+      content: base64
+    })
+  }
+);
 
-    if (!uploadResp.ok) throw new Error("Error subiendo imagen");
-
+if (!uploadResp.ok) {
+  const err = await uploadResp.text();
+  console.error("Respuesta GitHub:", err);
+  throw new Error("Error subiendo imagen");
+}
     // 2️⃣ leer fotos.json actual
     const fotosResp = await fetch(
       `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
