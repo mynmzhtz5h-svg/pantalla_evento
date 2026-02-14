@@ -56,7 +56,7 @@ body{
 
 <script>
 const CLOUD = "craneosuy";
-const LIST_URL = `https://res.cloudinary.com/${CLOUD}/image/list/evento-qr.json`;
+const LIST_URL = "https://mynmzhtz5h-svg.github.io/pantalla_evento/fotos.json";
 
 // 🔧 REFERENCIAS QUE FALTABAN
 const qr = document.getElementById("qr");
@@ -68,12 +68,11 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let idx = 0;
 
-async function cargar() {
-  try {
+async function cargar(){
+  try{
     const r = await fetch(LIST_URL + "?" + Date.now());
-    const j = await r.json();
-    fotos = j.resources.reverse();
-  } catch {
+    fotos = await r.json();
+  }catch{
     fotos = [];
   }
 }
