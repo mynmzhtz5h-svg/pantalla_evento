@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,
-  
 body{
   margin:0;height:100%;
   background:radial-gradient(circle,#222,#000);
@@ -55,10 +54,8 @@ body{
 </div>
 
 <script>
-const CLOUD = "craneosuy";
 const LIST_URL = "https://mynmzhtz5h-svg.github.io/pantalla_evento/fotos.json";
 
-// 🔧 REFERENCIAS QUE FALTABAN
 const qr = document.getElementById("qr");
 const autor = document.getElementById("autor");
 const carousel = document.getElementById("carousel");
@@ -66,13 +63,13 @@ const nombre = document.getElementById("nombre");
 const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
-let idx = 0;
 
 async function cargar(){
   try{
     const r = await fetch(LIST_URL + "?" + Date.now());
     fotos = await r.json();
-  }catch{
+  }catch(e){
+    console.error("Error cargando fotos", e);
     fotos = [];
   }
 }
@@ -94,13 +91,18 @@ async function loop() {
     carousel.innerHTML = "";
 
     const img = document.createElement("img");
-    img.src = f.secure_url;
+    img.src = f.img;
     img.className = "slide activa";
+
+    img.onerror = () => {
+      console.warn("Imagen no encontrada, se omite:", f.img);
+      return;
+    };
+
     carousel.appendChild(img);
 
-    const p = f.public_id.split("___");
-    nombre.textContent = p[0] || "";
-    mensaje.textContent = p[1] || "";
+    nombre.textContent = f.nombre || "";
+    mensaje.textContent = f.mensaje || "";
     autor.style.display = "block";
 
     await new Promise(r => setTimeout(r, 5000));
