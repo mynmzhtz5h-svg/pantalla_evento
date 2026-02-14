@@ -45,31 +45,55 @@ button{
   <input id="nombre" placeholder="Tu nombre" required>
   <input id="mensaje" placeholder="Mensaje (opcional)">
   <input id="foto" type="file" accept="image/*" required>
-  <button>Subir foto 📸</button>
+  <button type="submit">Subir foto 📸</button>
 </form>
 
 <script>
 const CLOUD = "craneosuy";
 const PRESET = "evento_unsigned";
 
-document.getElementById("f").onsubmit = async e =>{
+const f = document.getElementById("f");
+const nombre = document.getElementById("nombre");
+const mensaje = document.getElementById("mensaje");
+const foto = document.getElementById("foto");
+
+f.onsubmit = async e => {
   e.preventDefault();
 
-  const n = nombre.value.trim().replace(/\s+/g,"_");
-  const m = mensaje.value.trim().replace(/\s+/g,"_");
+  if(!foto.files.length){
+    alert("Seleccioná una foto");
+    return;
+  }
+
+  const n = nombre.value
+    .trim()
+    .replace(/\s+/g,"_")
+    .replace(/[^\w\-]/g,"");
+
+  const m = mensaje.value
+    .trim()
+    .replace(/\s+/g,"_")
+    .replace(/[^\w\-]/g,"");
 
   const fd = new FormData();
   fd.append("file", foto.files[0]);
   fd.append("upload_preset", PRESET);
+  fd.append("tags", "evento"); // 🔥 CLAVE PARA EL CARRUSEL
   fd.append("public_id", `evento___${n}___${m}`);
 
-  await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{
-    method:"POST",
-    body:fd
-  });
+  try{
+    const r = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,
+      { method:"POST", body: fd }
+    );
 
-  alert("Foto enviada 🙌");
-  f.reset();
+    if(!r.ok) throw new Error();
+
+    alert("✅ Foto enviada");
+    f.reset();
+  }catch{
+    alert("❌ Error al subir la foto");
+  }
 };
 </script>
 
