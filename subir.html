@@ -1,82 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Subí tu foto</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #111, #000);
-      color: #fff;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .card {
-      background: #0e0e0e;
-      padding: 28px;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.7);
-      text-align: center;
-    }
-    img { width: 180px; margin-bottom: 16px; }
-    h1 { font-size: 22px; margin-bottom: 14px; }
-    input, textarea, button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    input, textarea { background: #1a1a1a; color: #fff; }
-    textarea { resize: none; height: 80px; }
-    button {
-      background: linear-gradient(135deg, #00c853, #2979ff);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    button:disabled { opacity: .5; }
-    .estado { margin-top: 14px; min-height: 20px; }
-  </style>
-</head>
-
-<body>
-<div class="card">
-  <img src="logo.png" alt="Logo">
-  <h1>Subí tu foto al evento 📸</h1>
-
-  <input type="file" id="foto" accept="image/*">
-  <input type="text" id="nombre" placeholder="Tu nombre">
-  <textarea id="mensaje" placeholder="Mensaje (opcional)"></textarea>
-
-  <button id="btn">Subir foto</button>
-  <div class="estado" id="estado"></div>
-</div>
-
 <script>
-/* ================= CONFIG ================= */
-
 const CLOUD_NAME = "craneosuy";
 const UPLOAD_PRESET = "evento_unsigned";
-
-/* 👉 repo donde está fotos.json */
-const GH_OWNER = "mynmzhtz5h-svg";
-const GH_REPO  = "pantalla_evento";
-const GH_BRANCH = "main";
-
-/* ⚠️ token con permiso repo */
-const GH_TOKEN = "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";
-
-/* ========================================== */
 
 const btn = document.getElementById("btn");
 const estado = document.getElementById("estado");
@@ -86,8 +10,7 @@ const mensajeInput = document.getElementById("mensaje");
 
 function limpiar(texto, esNombre=false) {
   if (!texto.trim()) return esNombre ? "anonimo" : "";
-  return texto
-    .normalize("NFD")
+  return texto.normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9 _-]/g, "")
     .trim();
@@ -108,103 +31,29 @@ btn.onclick = async () => {
   const publicId = `${nombre}___${mensaje}___${Date.now()}`;
 
   try {
-    /* ================= 1️⃣ SUBIR A CLOUDINARY ================= */
-
     const fd = new FormData();
     fd.append("file", file);
     fd.append("upload_preset", UPLOAD_PRESET);
     fd.append("public_id", publicId);
     fd.append("folder", "evento-qr");
 
-    const up = await fetch(
+    const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
       { method: "POST", body: fd }
     );
 
-    const imgData = await up.json();
-    if (!up.ok) throw imgData;
-
-    /* ================= 2️⃣ LEER fotos.json ================= */
-
-    let fotos = [];
-    try {
-      const r = await fetch(
-        `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/fotos.json?${Date.now()}`
-      );
-      fotos = await r.json();
-      if (!Array.isArray(fotos)) fotos = [];
-    } catch {
-      fotos = [];
-    }
-
-    /* ================= 3️⃣ AGREGAR FOTO ================= */
-
-    fotos.unshift({
-      img: imgData.secure_url,
-      nombre,
-      mensaje
-    });
-
-    /* ================= 4️⃣ OBTENER SHA ================= */
-
-  let sha = null;
-
-try {
-  const shaResp = await fetch(
-    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json?ref=${GH_BRANCH}`,
-    {
-      headers: {
-        "Authorization": `token ${GH_TOKEN}`
-      }
-    }
-  );
-
-  if (shaResp.ok) {
-    const shaData = await shaResp.json();
-    sha = shaData.sha;
-  }
-} catch {
-  sha = null;
-}
-    /* ================= 5️⃣ GUARDAR fotos.json ================= */
-
-  const body = {
-  message: "update fotos evento",
-  content: btoa(
-    unescape(
-      encodeURIComponent(JSON.stringify(fotos, null, 2))
-    )
-  ),
-  branch: GH_BRANCH
-};
-
-if (sha) body.sha = sha;
-
-const save = await fetch(
-  `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
-  {
-    method: "PUT",
-    headers: {
-      "Authorization": `token ${GH_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  }
-);
-
-if (!save.ok) throw await save.json();
+    const data = await res.json();
+    if (!res.ok) throw data;
 
     estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
     foto.value = "";
     mensajeInput.value = "";
 
   } catch (e) {
-    console.error("ERROR:", e);
+    console.error(e);
     estado.textContent = "❌ Error al subir la foto";
   }
 
   btn.disabled = false;
 };
 </script>
-</body>
-</html>
