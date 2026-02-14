@@ -96,20 +96,94 @@ btn.onclick = async () => {
   fd.append("public_id", publicId);
   fd.append("folder", "evento-qr");
 
-  try {
-    await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: fd
-    });
+ try {
+  // convertir a base64
+  const base64 = await new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(",")[1]);
+    r.readAsDataURL(file);
+  });
 
-    estado.textContent = "✅ Tu foto se subió con éxito. ¡Mirá la pantalla!";
-    foto.value = "";
-    mensaje.value = "";
-  } catch {
-    estado.textContent = "❌ Error al subir la foto";
+  // 1️⃣ SUBIR IMAGEN
+  const uploadResp = await fetch(
+    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
+    {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${CONFIG.token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "subida foto evento",
+        content: base64,
+        branch: CONFIG.branch
+      })
+    }
+  );
+
+  if (!uploadResp.ok) {
+    const err = await uploadResp.json();
+    console.error("Error imagen:", err);
+    throw new Error("Error subiendo imagen");
   }
 
-  btn.disabled = false;
+  // 2️⃣ LEER fotos.json ACTUAL
+  const fotosResp = await fetch(
+    `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
+  );
+
+  let fotos = [];
+  if (fotosResp.ok) {
+    fotos = await fotosResp.json();
+  }
+
+  // 3️⃣ AGREGAR FOTO AL INICIO
+  fotos.unshift({
+    img: `https://${CONFIG.owner}.github.io/${CONFIG.repo}/fotos/${fileName}`,
+    nombre,
+    mensaje
+  });
+
+  // 4️⃣ OBTENER SHA ACTUAL
+  const shaResp = await fetch(
+    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
+    { headers: { "Authorization": `token ${CONFIG.token}` } }
+  );
+  const shaData = await shaResp.json();
+
+  // 5️⃣ SUBIR fotos.json ACTUALIZADO
+  await fetch(
+    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
+    {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${CONFIG.token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "update fotos evento",
+        content: btoa(
+          unescape(
+            encodeURIComponent(JSON.stringify(fotos, null, 2))
+          )
+        ),
+        sha: shaData.sha,
+        branch: CONFIG.branch
+      })
+    }
+  );
+
+  estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
+  fileInput.value = "";
+  document.getElementById("mensaje").value = "";
+
+} catch (e) {
+  console.error(e);
+  estado.textContent = "❌ Error al subir la foto";
+}
+
+btn.disabled = false;
+
 };
 </script>
 </body>
