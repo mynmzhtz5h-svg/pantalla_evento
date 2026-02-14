@@ -54,7 +54,10 @@ body{
 </div>
 
 <script>
-const LIST_URL = "https://mynmzhtz5h-svg.github.io/pantalla_evento/fotos.json";
+/* ========= CONFIG CLOUDINARY ========= */
+const CLOUD_NAME = "craneosuy";
+const FOLDER = "evento-qr";
+/* ==================================== */
 
 const qr = document.getElementById("qr");
 const autor = document.getElementById("autor");
@@ -64,12 +67,20 @@ const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
 
-async function cargar(){
-  try{
-    const r = await fetch(LIST_URL + "?" + Date.now());
-    fotos = await r.json();
-  }catch(e){
-    console.error("Error cargando fotos", e);
+/* 🔄 Cargar fotos desde Cloudinary */
+async function cargar() {
+  try {
+    const res = await fetch(
+      `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${FOLDER}.json?${Date.now()}`
+    );
+
+    if (!res.ok) throw new Error("No se pudo leer Cloudinary");
+
+    const data = await res.json();
+    fotos = (data.resources || []).reverse();
+
+  } catch (e) {
+    console.error("Error cargando fotos:", e);
     fotos = [];
   }
 }
@@ -91,18 +102,13 @@ async function loop() {
     carousel.innerHTML = "";
 
     const img = document.createElement("img");
-    img.src = f.img;
+    img.src = f.secure_url;
     img.className = "slide activa";
-
-    img.onerror = () => {
-      console.warn("Imagen no encontrada, se omite:", f.img);
-      return;
-    };
-
     carousel.appendChild(img);
 
-    nombre.textContent = f.nombre || "";
-    mensaje.textContent = f.mensaje || "";
+    const partes = f.public_id.split("___");
+    nombre.textContent = partes[0] || "";
+    mensaje.textContent = partes[1] || "";
     autor.style.display = "block";
 
     await new Promise(r => setTimeout(r, 5000));
