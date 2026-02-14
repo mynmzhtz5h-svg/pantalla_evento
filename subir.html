@@ -34,6 +34,7 @@
       border-radius: 12px;
       border: none;
       font-size: 16px;
+      box-sizing: border-box;
     }
     input, textarea { background: #1a1a1a; color: #fff; }
     textarea { resize: none; height: 80px; }
@@ -62,15 +63,31 @@
 </div>
 
 <script>
+/* ================= CONFIG ================= */
+
 const CLOUD_NAME = "craneosuy";
 const UPLOAD_PRESET = "evento_unsigned";
 
+/* 👉 repo donde está fotos.json */
+const GH_OWNER = "mynmzhtz5h-svg";
+const GH_REPO  = "pantalla_evento";
+const GH_BRANCH = "main";
+
+/* ⚠️ token con permiso repo */
+const GH_TOKEN = "PON_AQUI_TU_TOKEN";
+
+/* ========================================== */
+
 const btn = document.getElementById("btn");
 const estado = document.getElementById("estado");
+const foto = document.getElementById("foto");
+const nombreInput = document.getElementById("nombre");
+const mensajeInput = document.getElementById("mensaje");
 
-function limpiar(t, nombre=false) {
-  if (!t.trim()) return nombre ? "anonimo" : "";
-  return t.normalize("NFD")
+function limpiar(texto, esNombre=false) {
+  if (!texto.trim()) return esNombre ? "anonimo" : "";
+  return texto
+    .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9 _-]/g, "")
     .trim();
@@ -78,7 +95,7 @@ function limpiar(t, nombre=false) {
 
 btn.onclick = async () => {
   const file = foto.files[0];
-  if (!file || !nombre.value.trim()) {
+  if (!file || !nombreInput.value.trim()) {
     estado.textContent = "⚠️ Foto y nombre obligatorios";
     return;
   }
@@ -86,111 +103,97 @@ btn.onclick = async () => {
   btn.disabled = true;
   estado.textContent = "Subiendo foto… ⏳";
 
-  const n = limpiar(nombre.value, true);
-  const m = limpiar(mensaje.value);
-  const publicId = `${n}___${m}___${Date.now()}`;
+  const nombre = limpiar(nombreInput.value, true);
+  const mensaje = limpiar(mensajeInput.value);
+  const publicId = `${nombre}___${mensaje}___${Date.now()}`;
 
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("upload_preset", UPLOAD_PRESET);
-  fd.append("public_id", publicId);
-  fd.append("folder", "evento-qr");
+  try {
+    /* ================= 1️⃣ SUBIR A CLOUDINARY ================= */
 
-try {
-  // convertir a base64
-  const base64 = await new Promise(res => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(",")[1]);
-    r.readAsDataURL(file);
-  });
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", UPLOAD_PRESET);
+    fd.append("public_id", publicId);
+    fd.append("folder", "evento-qr");
 
-  // 1️⃣ SUBIR IMAGEN
-  const uploadImg = await fetch(
-    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos/${fileName}`,
-    {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${CONFIG.token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "subida foto evento",
-        content: base64,
-        branch: CONFIG.branch
-      })
-    }
-  );
-
-  if (!uploadImg.ok) throw new Error("Error subiendo imagen");
-
-  // 2️⃣ LEER fotos.json (si existe)
-  let fotos = [];
-  let sha = null;
-
-  const check = await fetch(
-    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
-    {
-      headers: { "Authorization": `token ${CONFIG.token}` }
-    }
-  );
-
-  if (check.ok) {
-    const data = await check.json();
-    sha = data.sha;
-
-    const raw = await fetch(
-      `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/fotos.json?${Date.now()}`
+    const up = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      { method: "POST", body: fd }
     );
-    fotos = await raw.json();
-  }
 
-  // 3️⃣ AGREGAR FOTO
-  fotos.unshift({
-    img: `https://${CONFIG.owner}.github.io/${CONFIG.repo}/fotos/${fileName}`,
-    nombre,
-    mensaje
-  });
+    const imgData = await up.json();
+    if (!up.ok) throw imgData;
 
-  // 4️⃣ CREAR / ACTUALIZAR fotos.json
-  const save = await fetch(
-    `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/fotos.json`,
-    {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${CONFIG.token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "update fotos evento",
-        content: btoa(
-          unescape(
-            encodeURIComponent(JSON.stringify(fotos, null, 2))
-          )
-        ),
-        ...(sha && { sha }),
-        branch: CONFIG.branch
-      })
+    /* ================= 2️⃣ LEER fotos.json ================= */
+
+    let fotos = [];
+    try {
+      const r = await fetch(
+        `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/fotos.json?${Date.now()}`
+      );
+      fotos = await r.json();
+      if (!Array.isArray(fotos)) fotos = [];
+    } catch {
+      fotos = [];
     }
-  );
 
-  if (!save.ok) {
-    const err = await save.json();
-    console.error("Error fotos.json:", err);
-    throw new Error("Error guardando fotos.json");
+    /* ================= 3️⃣ AGREGAR FOTO ================= */
+
+    fotos.unshift({
+      img: imgData.secure_url,
+      nombre,
+      mensaje
+    });
+
+    /* ================= 4️⃣ OBTENER SHA ================= */
+
+    const shaResp = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json?ref=${GH_BRANCH}`,
+      {
+        headers: {
+          "Authorization": `token ${GH_TOKEN}`
+        }
+      }
+    );
+
+    const shaData = await shaResp.json();
+    const sha = shaData.sha;
+
+    /* ================= 5️⃣ GUARDAR fotos.json ================= */
+
+    const save = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${GH_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "update fotos evento",
+          content: btoa(
+            unescape(
+              encodeURIComponent(JSON.stringify(fotos, null, 2))
+            )
+          ),
+          sha,
+          branch: GH_BRANCH
+        })
+      }
+    );
+
+    if (!save.ok) throw await save.json();
+
+    estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
+    foto.value = "";
+    mensajeInput.value = "";
+
+  } catch (e) {
+    console.error("ERROR:", e);
+    estado.textContent = "❌ Error al subir la foto";
   }
 
-  estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
-  fileInput.value = "";
-  document.getElementById("mensaje").value = "";
-
-} catch (e) {
-  console.error(e);
-  estado.textContent = "❌ Error al subir la foto";
-}
-
-btn.disabled = false;
-
-
+  btn.disabled = false;
 };
 </script>
 </body>
