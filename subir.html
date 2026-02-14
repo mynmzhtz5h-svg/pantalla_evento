@@ -74,7 +74,7 @@ const GH_REPO  = "pantalla_evento";
 const GH_BRANCH = "main";
 
 /* ⚠️ token con permiso repo */
-const GH_TOKEN = "PON_AQUI_TU_TOKEN";
+const GH_TOKEN = "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";
 
 /* ========================================== */
 
@@ -147,42 +147,52 @@ btn.onclick = async () => {
 
     /* ================= 4️⃣ OBTENER SHA ================= */
 
-    const shaResp = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json?ref=${GH_BRANCH}`,
-      {
-        headers: {
-          "Authorization": `token ${GH_TOKEN}`
-        }
+  let sha = null;
+
+try {
+  const shaResp = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json?ref=${GH_BRANCH}`,
+    {
+      headers: {
+        "Authorization": `token ${GH_TOKEN}`
       }
-    );
+    }
+  );
 
+  if (shaResp.ok) {
     const shaData = await shaResp.json();
-    const sha = shaData.sha;
-
+    sha = shaData.sha;
+  }
+} catch {
+  sha = null;
+}
     /* ================= 5️⃣ GUARDAR fotos.json ================= */
 
-    const save = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": `token ${GH_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: "update fotos evento",
-          content: btoa(
-            unescape(
-              encodeURIComponent(JSON.stringify(fotos, null, 2))
-            )
-          ),
-          sha,
-          branch: GH_BRANCH
-        })
-      }
-    );
+  const body = {
+  message: "update fotos evento",
+  content: btoa(
+    unescape(
+      encodeURIComponent(JSON.stringify(fotos, null, 2))
+    )
+  ),
+  branch: GH_BRANCH
+};
 
-    if (!save.ok) throw await save.json();
+if (sha) body.sha = sha;
+
+const save = await fetch(
+  `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
+  {
+    method: "PUT",
+    headers: {
+      "Authorization": `token ${GH_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }
+);
+
+if (!save.ok) throw await save.json();
 
     estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
     foto.value = "";
