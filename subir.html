@@ -77,23 +77,27 @@ button:disabled {
 const CLOUD_NAME = "craneosuy";
 const UPLOAD_PRESET = "evento_unsigned";
 
+const GH_OWNER = "mynmzhtz5h-svg";
+const GH_REPO  = "pantalla_evento";
+const GH_BRANCH = "main";
+const GH_TOKEN = "PEGÁ_ACÁ_TU_TOKEN_VALIDO"; // clásico token con repo
+
 const btn = document.getElementById("btn");
 const estado = document.getElementById("estado");
 const foto = document.getElementById("foto");
 const nombreInput = document.getElementById("nombre");
 const mensajeInput = document.getElementById("mensaje");
 
-function limpiar(texto, esNombre=false) {
-  if (!texto.trim()) return esNombre ? "anonimo" : "";
-  return texto.normalize("NFD")
+function limpiar(t, nombre=false){
+  if (!t.trim()) return nombre ? "anonimo" : "";
+  return t.normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9 _-]/g, "")
     .trim();
 }
 
 btn.onclick = async () => {
-  const file = foto.files[0];
-  if (!file || !nombreInput.value.trim()) {
+  if (!foto.files.length || !nombreInput.value.trim()) {
     estado.textContent = "⚠️ Foto y nombre obligatorios";
     return;
   }
@@ -101,26 +105,72 @@ btn.onclick = async () => {
   btn.disabled = true;
   estado.textContent = "Subiendo foto… ⏳";
 
-  const nombre = limpiar(nombreInput.value, true);
-  const mensaje = limpiar(mensajeInput.value);
-  const publicId = `${nombre}___${mensaje}___${Date.now()}`;
-
   try {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", UPLOAD_PRESET);
-    fd.append("public_id", publicId);
-    fd.append("folder", "evento-qr");
+    /* 1️⃣ SUBIR IMAGEN */
+    const nombre = limpiar(nombreInput.value, true);
+    const mensaje = limpiar(mensajeInput.value);
+    const publicId = `${nombre}___${mensaje}___${Date.now()}`;
 
-    const res = await fetch(
+    const fd = new FormData();
+    fd.append("file", foto.files[0]);
+    fd.append("upload_preset", UPLOAD_PRESET);
+    fd.append("folder", "evento-qr");
+    fd.append("public_id", publicId);
+
+    const up = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
       { method: "POST", body: fd }
     );
+    const img = await up.json();
+    if (!up.ok) throw img;
 
-    const data = await res.json();
-    if (!res.ok) throw data;
+    /* 2️⃣ LEER fotos.json */
+    let fotos = [];
+    try {
+      const r = await fetch(
+        `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/fotos.json?${Date.now()}`
+      );
+      fotos = await r.json();
+      if (!Array.isArray(fotos)) fotos = [];
+    } catch {}
 
-    estado.textContent = "✅ Foto subida correctamente, mirá la pantalla!";
+    /* 3️⃣ AGREGAR FOTO */
+    fotos.unshift({
+      img: img.secure_url,
+      nombre,
+      mensaje
+    });
+
+    /* 4️⃣ OBTENER SHA */
+    const shaResp = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
+      { headers: { Authorization: `token ${GH_TOKEN}` } }
+    );
+    const shaData = await shaResp.json();
+
+    /* 5️⃣ GUARDAR fotos.json */
+    const save = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/fotos.json`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${GH_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "foto evento",
+          content: btoa(
+            unescape(encodeURIComponent(JSON.stringify(fotos, null, 2)))
+          ),
+          sha: shaData.sha,
+          branch: GH_BRANCH
+        })
+      }
+    );
+
+    if (!save.ok) throw await save.json();
+
+    estado.textContent = "✅ Foto subida, mirá la pantalla!";
     foto.value = "";
     mensajeInput.value = "";
 
