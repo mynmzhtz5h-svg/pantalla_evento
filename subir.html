@@ -1,4 +1,77 @@
-<!DOCTYPE html> <html lang="es"> <head> <meta charset="UTF-8"> <title>Subí tu foto</title> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style> body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, #111, #000); color: #fff; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; } .card { background: #0e0e0e; padding: 28px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.7); text-align: center; } img { width: 180px; margin-bottom: 16px; } h1 { font-size: 22px; margin-bottom: 14px; } input, textarea, button { width: 100%; margin-top: 12px; padding: 14px; border-radius: 12px; border: none; font-size: 16px; box-sizing: border-box; } input, textarea { background: #1a1a1a; color: #fff; } textarea { resize: none; height: 80px; } button { background: linear-gradient(135deg, #00c853, #2979ff); color: #fff; font-weight: 700; cursor: pointer; } button:disabled { opacity: .5; } .estado { margin-top: 14px; min-height: 20px; } </style> </head> <body> <div class="card"> <img src="logo.png" alt="Logo"> <h1>Subí tu foto al evento 📸</h1> <input type="file" id="foto" accept="image/*"> <input type="text" id="nombre" placeholder="Tu nombre"> <textarea id="mensaje" placeholder="Mensaje (opcional)"></textarea> <button id="btn">Subir foto</button> <div class="estado" id="estado"></div> </div>
+<!DOCTYPE html> 
+<html lang="es"> 
+  <head> <meta charset="UTF-8"> 
+    <title>Subí tu foto</title> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <style> 
+      body 
+      { margin: 0; 
+       min-height: 100vh; 
+       background: radial-gradient(circle at top, #111, #000); 
+       color: #fff; 
+       font-family: system-ui, sans-serif; 
+       display: flex; 
+       justify-content: center; 
+       align-items: center;
+      } 
+      .card { background: #0e0e0e; 
+             padding: 28px; 
+             border-radius: 20px; 
+             width: 100%; 
+             max-width: 420px; 
+             box-shadow: 0 20px 60px rgba(0,0,0,.7); 
+             text-align: center;
+            } 
+      img { 
+        width: 180px; 
+        margin-bottom: 16px;
+      }
+    h1 { 
+      font-size: 22px; 
+      margin-bottom: 14px;
+    }
+input, textarea, button { 
+  width: 100%; 
+  margin-top: 12px; 
+  padding: 14px; 
+  border-radius: 12px; 
+  border: none; 
+  font-size: 16px; 
+  box-sizing: border-box;
+}  
+input, textarea { 
+  background: #1a1a1a; 
+  color: #fff;
+} 
+textarea { 
+  resize: none; 
+  height: 80px; 
+} 
+button { 
+  background: linear-gradient(135deg, #00c853, #2979ff); 
+  color: #fff; 
+  font-weight: 700; 
+  cursor: pointer; 
+} 
+button:disabled { 
+  opacity: .5;
+} 
+.estado { 
+  margin-top: 14px; 
+  min-height: 20px;
+} 
+    </style> 
+  </head> 
+  <body> 
+    <div class="card"> 
+      <img src="logo.png" alt="Logo"> 
+      <h1>Subí tu foto al evento 📸</h1> 
+      <input type="file" id="foto" accept="image/*"> 
+      <input type="text" id="nombre" placeholder="Tu nombre"> 
+      <textarea id="mensaje" placeholder="Mensaje (opcional)"></textarea> 
+      <button id="btn">Subir foto</button> 
+      <div class="estado" id="estado"></div>
+</div>
   
 <script>
 const CLOUD_NAME = "craneosuy";
