@@ -99,8 +99,8 @@ html,body{
 </div>
 
 <script>
-const LIST_URL =
-"https://res.cloudinary.com/craneosuy/image/list/evento.json";
+const TAG = "evento"; // el tag que usás al subir
+const CLOUD = "craneosuy";
 
 const carousel = document.getElementById("carousel");
 const qr = document.getElementById("qr");
@@ -111,26 +111,27 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let index = 0;
 
-async function cargarFotos(){
-  try{
-    const r = await fetch(LIST_URL + "?" + Date.now());
-    const j = await r.json();
-    fotos = j.resources || [];
-  }catch{
-    fotos = [];
-  }
+function cloudinaryCallback(data){
+  fotos = data.resources || [];
+}
+
+function cargarFotos(){
+  const s = document.createElement("script");
+  s.src = `https://res.cloudinary.com/${CLOUD}/image/list/${TAG}.json?cb=${Date.now()}`;
+  document.body.appendChild(s);
+  s.onload = () => s.remove();
 }
 
 function mostrar(){
   if(!fotos.length){
-    carousel.innerHTML="";
-    autor.style.display="none";
+    carousel.innerHTML = "";
+    autor.style.display = "none";
     qr.classList.remove("chico");
     return;
   }
 
   qr.classList.add("chico");
-  carousel.innerHTML="";
+  carousel.innerHTML = "";
 
   const f = fotos[index];
   const img = document.createElement("img");
@@ -146,15 +147,15 @@ function mostrar(){
   index = (index + 1) % fotos.length;
 }
 
-// refresca lista (entra foto nueva al toque)
+// refresca lista constantemente (foto nueva entra sola)
 setInterval(cargarFotos, 2000);
 
-// cambia de foto automático
+// carrusel
 setInterval(mostrar, 4000);
 
-// inicio inmediato
-cargarFotos().then(mostrar);
+// inicio
+cargarFotos();
+setTimeout(mostrar, 1500);
 </script>
-
 </body>
 </html>
