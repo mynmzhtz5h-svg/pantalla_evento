@@ -2,75 +2,158 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Subí tu foto</title>
+<title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  margin:0;
-  min-height:100vh;
+html,body{
+  margin:0;height:100%;
+  background:radial-gradient(circle,#222,#000);
+  font-family:system-ui;
+  overflow:hidden;
+}
+
+#branding{
+  position:absolute;top:20px;left:50%;
+  transform:translateX(-50%);
+  z-index:10
+}
+#branding img{width:200px}
+
+#carousel{
+  position:absolute;
+  top:160px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  height:65vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#000;
+}
+
+.slide{
+  position:absolute;
+  max-width:100%;
+  max-height:100%;
+  opacity:0;
+  transition:opacity 1s;
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.slide.activa{opacity:1}
+
+#qr{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  transition:all .6s;
+}
+
+#qr.chico{
+  left:auto;
+  right:30px;
+  top:50%;
+  transform:translateY(-50%);
+  width:140px;
+}
+
+#qr img{width:100%;border-radius:20px}
+
+#qr div{
+  margin-top:12px;
   color:#fff;
-  font-family:system-ui;
+  font-size:20px;
+  font-weight:600;
 }
 
-form{
-  width:90%;
-  max-width:420px;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
+#autor{
+  position:absolute;
+  bottom:40px;
+  left:30px;
+  color:#fff;
+  display:none;
 }
-
-input,button{
-  padding:14px;
-  font-size:18px;
-  border-radius:10px;
-  border:none;
-}
-
-button{
-  background:#00c2ff;
-  font-weight:700;
-}
+#autor span{display:block;font-size:20px}
 </style>
 </head>
 
 <body>
 
-<form id="f">
-  <input id="nombre" placeholder="Tu nombre" required>
-  <input id="mensaje" placeholder="Mensaje (opcional)">
-  <input id="foto" type="file" accept="image/*" required>
-  <button>Subir foto 📸</button>
-</form>
+<div id="branding">
+  <img src="logo.png">
+</div>
+
+<div id="carousel"></div>
+
+<div id="qr">
+  <img src="qr.png">
+  <div>Escaneá y subí tu foto 📸</div>
+</div>
+
+<div id="autor">
+  <span id="nombre"></span>
+  <span id="mensaje"></span>
+</div>
 
 <script>
-const CLOUD = "craneosuy";
-const PRESET = "evento_unsigned";
+const LIST_URL =
+"https://res.cloudinary.com/TU_CLOUD_NAME/image/list/evento.json";
 
-document.getElementById("f").onsubmit = async e =>{
-  e.preventDefault();
+const carousel = document.getElementById("carousel");
+const qr = document.getElementById("qr");
+const autor = document.getElementById("autor");
+const nombre = document.getElementById("nombre");
+const mensaje = document.getElementById("mensaje");
 
-  const n = nombre.value.trim().replace(/\s+/g,"_");
-  const m = mensaje.value.trim().replace(/\s+/g,"_");
+let fotos = [];
+let index = 0;
 
-  const fd = new FormData();
-  fd.append("file", foto.files[0]);
-  fd.append("upload_preset", PRESET);
-  fd.append("public_id", `evento___${n}___${m}`);
+async function cargarFotos(){
+  try{
+    const r = await fetch(LIST_URL + "?" + Date.now());
+    const j = await r.json();
+    fotos = j.resources || [];
+  }catch{
+    fotos = [];
+  }
+}
 
-  await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{
-    method:"POST",
-    body:fd
-  });
+function mostrar(){
+  if(!fotos.length){
+    carousel.innerHTML="";
+    autor.style.display="none";
+    qr.classList.remove("chico");
+    return;
+  }
 
-  alert("Foto enviada 🙌");
-  f.reset();
-};
+  qr.classList.add("chico");
+  carousel.innerHTML="";
+
+  const f = fotos[index];
+  const img = document.createElement("img");
+  img.src = f.secure_url;
+  img.className = "slide activa";
+  carousel.appendChild(img);
+
+  const partes = f.public_id.split("___");
+  nombre.textContent = partes[1]?.replace(/_/g," ") || "";
+  mensaje.textContent = partes[2]?.replace(/_/g," ") || "";
+  autor.style.display = "block";
+
+  index = (index + 1) % fotos.length;
+}
+
+// refresca lista (entra foto nueva al toque)
+setInterval(cargarFotos, 2000);
+
+// cambia de foto automático
+setInterval(mostrar, 4000);
+
+// inicio inmediato
+cargarFotos().then(mostrar);
 </script>
 
 </body>
