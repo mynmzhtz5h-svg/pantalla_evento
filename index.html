@@ -4,43 +4,85 @@
 <meta charset="UTF-8">
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-html,
-body{
+html,body{
   margin:0;height:100%;
   background:radial-gradient(circle,#222,#000);
   font-family:system-ui;
   overflow:hidden;
 }
-#branding{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10}
+
+#branding{
+  position:absolute;top:20px;left:50%;
+  transform:translateX(-50%);
+  z-index:10
+}
 #branding img{width:200px}
 
-#carousel{position:absolute;top:180px;left:50%;transform:translateX(-50%);
-  width:90%;height:60vh;display:flex;justify-content:center;align-items:center}
-
-.slide{max-width:100%;max-height:100%;opacity:0;transition:opacity 1s}
-.slide.activa{opacity:1}
-
-#qr{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  text-align:center;transition:all 1s;z-index:5}
-#qr.chico{left:auto;right:20px;top:50%;transform:translateY(-50%);width:120px}
-#qr img{width:50%;border-radius:16px}
-
-#qr div {
-  margin-top: 10px;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 600;
-  text-shadow: 0 2px 6px rgba(0,0,0,.8);
+#carousel{
+  position:absolute;
+  top:160px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  height:65vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-#autor{position:absolute;bottom:40px;left:20px;color:#fff;display:none}
-#autor span{display:block;font-size:18px}
+#carousel img{
+  max-width:100%;
+  max-height:100%;
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+
+#qr{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  transition:all .6s;
+  z-index:5;
+}
+
+#qr.chico{
+  left:auto;
+  right:30px;
+  top:50%;
+  transform:translateY(-50%);
+  width:140px;
+}
+
+#qr img{width:100%;border-radius:20px}
+
+#qr div{
+  margin-top:12px;
+  color:#fff;
+  font-size:20px;
+  font-weight:600;
+}
+
+#autor{
+  position:absolute;
+  bottom:40px;
+  left:30px;
+  color:#fff;
+  display:none;
+}
+#autor span{display:block;font-size:20px}
 </style>
 </head>
 
 <body>
-<div id="branding"><img src="logo.png"></div>
+
+<div id="branding">
+  <img src="logo.png">
+</div>
+
 <div id="carousel"></div>
 
 <div id="qr">
@@ -52,22 +94,55 @@ body{
   <span id="nombre"></span>
   <span id="mensaje"></span>
 </div>
+
 <script>
-const CLOUD_NAME = "craneosuy";
-const FOLDER = "evento-qr";
+const LIST_URL =
+"https://res.cloudinary.com/craneosuy/image/list/evento.json";
 
-async function cargarFotos() {
-  const res = await fetch(
-    `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${FOLDER}.json?t=${Date.now()}`
-  );
+const carousel = document.getElementById("carousel");
+const qr = document.getElementById("qr");
+const autor = document.getElementById("autor");
+const nombre = document.getElementById("nombre");
+const mensaje = document.getElementById("mensaje");
 
-  const data = await res.json();
-  fotos = data.resources.map(
-    r => `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${r.public_id}`
-  );
+let ultimaMostrada = "";
 
-  if (fotos.length) mostrarFoto();
+async function refrescar(){
+  try{
+    const r = await fetch(LIST_URL + "?" + Date.now());
+    const j = await r.json();
+    if(!j.resources || !j.resources.length) return limpiar();
+
+    const f = j.resources[j.resources.length - 1];
+    if(f.public_id === ultimaMostrada) return;
+
+    ultimaMostrada = f.public_id;
+
+    carousel.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = f.secure_url;
+    carousel.appendChild(img);
+
+    const partes = f.public_id.split("___");
+    nombre.textContent = partes[1]?.replace(/_/g," ") || "";
+    mensaje.textContent = partes[2]?.replace(/_/g," ") || "";
+
+    autor.style.display = "block";
+    qr.classList.add("chico");
+
+  }catch(e){
+    console.log("esperando fotos...");
+  }
 }
+
+function limpiar(){
+  carousel.innerHTML="";
+  autor.style.display="none";
+  qr.classList.remove("chico");
+}
+
+setInterval(refrescar, 2000);
 </script>
+
 </body>
 </html>
