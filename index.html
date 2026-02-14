@@ -54,10 +54,8 @@ body{
 </div>
 
 <script>
-/* ========= CONFIG CLOUDINARY ========= */
-const CLOUD_NAME = "craneosuy";
-const FOLDER = "evento-qr";
-/* ==================================== */
+const LIST_URL =
+  "https://res.cloudinary.com/craneosuy/image/upload/evento-qr.json";
 
 const qr = document.getElementById("qr");
 const autor = document.getElementById("autor");
@@ -67,28 +65,20 @@ const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
 
-/* 🔄 Cargar fotos desde Cloudinary */
-async function cargar() {
-  try {
-    const res = await fetch(
-      `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${FOLDER}.json?${Date.now()}`
-    );
-
-    if (!res.ok) throw new Error("No se pudo leer Cloudinary");
-
-    const data = await res.json();
-    fotos = (data.resources || []).reverse();
-
-  } catch (e) {
-    console.error("Error cargando fotos:", e);
+async function cargar(){
+  try{
+    const r = await fetch(LIST_URL + "?" + Date.now());
+    const j = await r.json();
+    fotos = (j.resources || []).reverse();
+  }catch{
     fotos = [];
   }
 }
 
-async function loop() {
+async function loop(){
   await cargar();
 
-  if (!fotos.length) {
+  if(!fotos.length){
     qr.classList.remove("chico");
     autor.style.display = "none";
     carousel.innerHTML = "";
@@ -98,7 +88,7 @@ async function loop() {
 
   qr.classList.add("chico");
 
-  for (const f of fotos) {
+  for(const f of fotos){
     carousel.innerHTML = "";
 
     const img = document.createElement("img");
@@ -106,23 +96,23 @@ async function loop() {
     img.className = "slide activa";
     carousel.appendChild(img);
 
-    const partes = f.public_id.split("___");
-    nombre.textContent = partes[0] || "";
-    mensaje.textContent = partes[1] || "";
+    const partes = f.public_id.split("/").pop().split("___");
+    nombre.textContent = partes[0]?.replace(/_/g," ") || "";
+    mensaje.textContent = partes[1]?.replace(/_/g," ") || "";
     autor.style.display = "block";
 
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r=>setTimeout(r,5000));
   }
 
-  carousel.innerHTML = "";
-  autor.style.display = "none";
+  carousel.innerHTML="";
+  autor.style.display="none";
   qr.classList.remove("chico");
-
-  setTimeout(loop, 10000);
+  setTimeout(loop,10000);
 }
 
 loop();
 </script>
+
 
 </body>
 </html>
