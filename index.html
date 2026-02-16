@@ -1,69 +1,69 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Pantalla Evento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-html,body{
-  margin:0;height:100%;
-  background:radial-gradient(circle,#222,#000);
-  font-family:system-ui;
-  overflow:hidden;
-}
-#branding{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10}
-#branding img{width:200px}
+  html,body{
+    margin:0;height:100%;
+    background:radial-gradient(circle,#222,#000);
+    font-family:system-ui;
+    overflow:hidden;
+  }
+  #branding{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10}
+  #branding img{width:200px}
 
-#carousel{
-  position:absolute;top:160px;left:50%;
-  transform:translateX(-50%);
-  width:90%;height:65vh;
-  display:flex;justify-content:center;align-items:center
-}
+  #carousel{
+    position:absolute;top:160px;left:50%;
+    transform:translateX(-50%);
+    width:90%;height:65vh;
+    display:flex;justify-content:center;align-items:center;
+  }
 
-.slide{
-  position:absolute;
-  max-width:100%;max-height:100%;
-  opacity:0;
-  transition:opacity 2s;
-  border-radius:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6)
-}
-.slide.activa{opacity:1}
+  .slide{
+    position:absolute;
+    max-width:100%;max-height:100%;
+    opacity:0;
+    transition:opacity 1.5s ease-in-out; /* Suavizado */
+    border-radius:20px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  .slide.activa{opacity:1}
 
-#qr{
-  position:absolute;left:50%;top:50%;
-  transform:translate(-50%,-50%);
-  text-align:center;
-  transition:all .8s
-}
-#qr.chico{
-  left:auto;right:30px;top:50%;
-  transform:translateY(-50%);
-  width:140px
-}
-#qr img{width:60%;border-radius:20px}
-#qr div{margin-top:12px;color:#fff;font-size:20px;font-weight:600}
+  #qr{
+    position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    transition:all .8s ease;
+    z-index: 20;
+  }
+  #qr.chico{
+    left:auto;right:30px;top:80%; /* Ajustado para que no tape tanto */
+    transform:scale(0.6);
+    width:200px;
+  }
+  #qr img{width:180px;border-radius:20px; background: white; padding: 10px;}
+  #qr div{margin-top:12px;color:#fff;font-size:20px;font-weight:600; text-shadow: 2px 2px 4px #000;}
 
-#autor{
-  position:absolute;
-  left:40px;
-  top:50%;
-  transform:translateY(-50%);
-  display:none;
-  max-width:30%;
-}
-#autor span{
-  display:block;
-  font-size:26px;
-  font-weight:700;
-  margin-bottom:10px;
-}
-#mensaje{font-size:22px}
+  #autor{
+    position:absolute;
+    left:40px;
+    bottom:40px; /* Movido abajo para mejor visibilidad */
+    display:none;
+    max-width:40%;
+    color: white;
+    z-index: 30;
+    text-shadow: 2px 2px 4px #000;
+  }
+  #autor span{
+    display:block;
+    font-size:28px;
+    font-weight:700;
+  }
+  #mensaje{font-size:22px; font-style: italic;}
 </style>
 </head>
-
 <body>
 
 <div id="branding"><img src="logo.png"></div>
@@ -81,7 +81,6 @@ html,body{
 
 <script>
 const WORKER = "https://evento-foto.pablocerrutti.workers.dev";
-
 const carousel = document.getElementById("carousel");
 const qr = document.getElementById("qr");
 const autor = document.getElementById("autor");
@@ -91,80 +90,77 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let index = 0;
 
-/* ======================
-   CARGA DE FOTOS
-====================== */
 async function cargarFotos(){
   try{
     const r = await fetch(WORKER + "/list?ts=" + Date.now());
     const data = await r.json();
-    if(Array.isArray(data)){
+    if(Array.isArray(data) && data.length > 0){
       fotos = data;
+      return true;
     }
-  }catch{}
+  }catch(e){ console.error("Error cargando fotos", e); }
+  return false;
 }
 
-/* ======================
-   MOSTRAR QR
-====================== */
-function mostrarQR(){
-  carousel.innerHTML = "";
-  autor.style.display = "none";
-  qr.classList.remove("chico");
-
-  setTimeout(async ()=>{
-    await cargarFotos();
-    if(fotos.length){
-      index = 0;
-      mostrarFoto();
-    }else{
-      mostrarQR();
-    }
-  },10000);
+async function iniciar(){
+  const hayFotos = await cargarFotos();
+  
+  if(hayFotos){
+    mostrarFoto();
+  } else {
+    // Si no hay fotos, reintentar en 5 segundos manteniendo el QR grande
+    qr.classList.remove("chico");
+    autor.style.display = "none";
+    carousel.innerHTML = "";
+    setTimeout(iniciar, 5000);
+  }
 }
 
-/* ======================
-   MOSTRAR FOTO
-====================== */
 function mostrarFoto(){
-  if(!fotos.length){
-    return mostrarQR();
+  if(index >= fotos.length) {
+    index = 0; // Reiniciar ciclo
+    iniciar(); // Volver a chequear si hay fotos nuevas
+    return;
   }
 
+  const f = fotos[index];
   qr.classList.add("chico");
 
-  const f = fotos[index];
-
+  // Crear nueva imagen
   const img = document.createElement("img");
   img.src = f.url;
   img.className = "slide";
-  carousel.appendChild(img);
+  
+  img.onload = () => {
+    // Solo cuando la imagen cargó, la mostramos y barremos la anterior
+    carousel.innerHTML = ""; 
+    carousel.appendChild(img);
+    
+    // Forzar reflow para la transición
+    setTimeout(() => img.classList.add("activa"), 100);
 
-  requestAnimationFrame(()=>img.classList.add("activa"));
+    // Procesar textos (Cloudinary usa public_id)
+    const partes = f.public_id.split("___");
+    if(partes.length > 1){
+      nombre.textContent = partes[1].replace(/_/g," ");
+      mensaje.textContent = partes[2] ? partes[2].replace(/_/g," ") : "";
+      autor.style.display = "block";
+    } else {
+      autor.style.display = "none";
+    }
 
-  if(carousel.children.length > 1){
-    carousel.children[0].remove();
-  }
+    index++;
+    setTimeout(mostrarFoto, 8000); // 8 segundos por foto
+  };
 
-  const p = f.public_id.split("___");
-  nombre.textContent = p[1]?.replace(/_/g," ") || "";
-  mensaje.textContent = p[2]?.replace(/_/g," ") || "";
-  autor.style.display = "block";
-
-  index++;
-
-  if(index >= fotos.length){
-    setTimeout(mostrarQR,10000);
-  }else{
-    setTimeout(mostrarFoto,10000);
-  }
+  img.onerror = () => {
+    index++;
+    mostrarFoto();
+  };
 }
 
-/* ======================
-   ARRANQUE ÚNICO
-====================== */
-mostrarQR();
+// Arrancar
+iniciar();
 </script>
-
 </body>
 </html>
