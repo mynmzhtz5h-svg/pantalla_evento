@@ -99,9 +99,10 @@ html,body{
 </div>
 
 <script>
-const CLOUD = "craneosuy";
-const TAG = "evento";
+/* 🔧 CONFIG */
+const WORKER = "https://evento-fotos.pablocerrutti.workers.dev";
 
+/* DOM */
 const carousel = document.getElementById("carousel");
 const qr = document.getElementById("qr");
 const autor = document.getElementById("autor");
@@ -111,53 +112,50 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let index = 0;
 
-/* 🔥 ESTE CALLBACK ES OBLIGATORIO */
-function cloudinaryCallback(data){
-  fotos = data.resources || [];
+/* 🔄 Cargar fotos desde Cloudflare */
+async function cargarFotos(){
+  try{
+    const r = await fetch(`${WORKER}/list`);
+    const data = await r.json();
+    fotos = data || [];
+  }catch(e){}
 }
 
-/* carga JSONP correctamente */
-function cargarFotos(){
-  const s = document.createElement("script");
-  s.src = `https://res.cloudinary.com/${CLOUD}/image/list/${TAG}.json?callback=cloudinaryCallback&_=${Date.now()}`;
-  document.body.appendChild(s);
-  s.onload = () => s.remove();
-}
-
+/* ▶ Mostrar carrusel */
 function mostrar(){
   if(!fotos.length){
-    carousel.innerHTML="";
-    autor.style.display="none";
+    carousel.innerHTML = "";
+    autor.style.display = "none";
     qr.classList.remove("chico");
     return;
   }
 
   qr.classList.add("chico");
-  carousel.innerHTML="";
+  carousel.innerHTML = "";
 
   const f = fotos[index];
   const img = document.createElement("img");
-  img.src = f.secure_url;
+  img.src = f.url;
   img.className = "slide activa";
   carousel.appendChild(img);
 
   const partes = f.public_id.split("___");
   nombre.textContent = partes[1]?.replace(/_/g," ") || "";
   mensaje.textContent = partes[2]?.replace(/_/g," ") || "";
-  autor.style.display="block";
+  autor.style.display = "block";
 
   index = (index + 1) % fotos.length;
 }
 
-/* foto nueva entra sola */
-setInterval(cargarFotos, 2000);
+/* 🔁 LOOP EVENTO */
+setInterval(cargarFotos, 1500);   // entra foto nueva casi instantáneo
+setInterval(mostrar, 4000);       // carrusel fluido
 
-/* carrusel */
-setInterval(mostrar, 4000);
-
-/* inicio */
-cargarFotos();
-setTimeout(mostrar, 1500);
+/* 🚀 START */
+(async ()=>{
+  await cargarFotos();
+  mostrar();
+})();
 </script>
 
 </body>
