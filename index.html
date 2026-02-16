@@ -100,7 +100,7 @@ html,body{
 
 <script>
 /* 🔧 CONFIG */
-const WORKER = "https://evento-fotos.TUUSUARIO.workers.dev";
+const WORKER = "https://evento-foto.pablocerrutti.workers.dev";
 
 /* DOM */
 const carousel = document.getElementById("carousel");
@@ -111,33 +111,50 @@ const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
 let index = 0;
+let mostrando = false;
 
-/* 🔄 Cargar fotos desde Cloudflare */
+/* 🔄 Cargar fotos */
 async function cargarFotos(){
   try{
-    const r = await fetch(`${WORKER}/list`);
+    const r = await fetch(`${WORKER}/list?ts=${Date.now()}`);
     const data = await r.json();
-    fotos = data || [];
+
+    if (Array.isArray(data)) {
+      fotos = data;
+
+      // si el índice quedó fuera por borrados
+      if (index >= fotos.length) {
+        index = 0;
+      }
+    }
   }catch(e){}
 }
 
 /* ▶ Mostrar carrusel */
 function mostrar(){
-  if(!fotos.length){
-    carousel.innerHTML = "";
-    autor.style.display = "none";
-    qr.classList.remove("chico");
-    return;
-  }
+  if (!fotos.length || mostrando) return;
+
+  mostrando = true;
 
   qr.classList.add("chico");
-  carousel.innerHTML = "";
 
   const f = fotos[index];
+
   const img = document.createElement("img");
   img.src = f.url;
-  img.className = "slide activa";
+  img.className = "slide";
+
   carousel.appendChild(img);
+
+  requestAnimationFrame(() => {
+    img.classList.add("activa");
+  });
+
+  // limpiar slide anterior
+  const slides = carousel.querySelectorAll(".slide");
+  if (slides.length > 1) {
+    slides[0].remove();
+  }
 
   const partes = f.public_id.split("___");
   nombre.textContent = partes[1]?.replace(/_/g," ") || "";
@@ -145,11 +162,15 @@ function mostrar(){
   autor.style.display = "block";
 
   index = (index + 1) % fotos.length;
+
+  setTimeout(() => {
+    mostrando = false;
+  }, 1100);
 }
 
 /* 🔁 LOOP EVENTO */
-setInterval(cargarFotos, 1500);   // entra foto nueva casi instantáneo
-setInterval(mostrar, 4000);       // carrusel fluido
+setInterval(cargarFotos, 1500);   // refresco rápido
+setInterval(mostrar, 4000);       // carrusel estable
 
 /* 🚀 START */
 (async ()=>{
