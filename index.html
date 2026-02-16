@@ -59,7 +59,6 @@ html,body{
   font-size:26px;
   font-weight:700;
   margin-bottom:10px;
-  text-shadow:0 4px 12px rgba(0,0,0,.8);
 }
 #mensaje{font-size:22px}
 </style>
@@ -91,43 +90,24 @@ const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
 let index = 0;
-let enQR = true;
 
-const colores = ["#00eaff","#ff4ecd","#ffe600","#7cff00","#ff7b00"];
-
-/* verifica si imagen existe */
-async function existeImagen(url){
-  try{
-    const r = await fetch(url,{method:"HEAD",cache:"no-store"});
-    return r.ok;
-  }catch{return false}
-}
-
-/* carga y fusiona fotos */
+/* ======================
+   CARGA DE FOTOS
+====================== */
 async function cargarFotos(){
   try{
     const r = await fetch(WORKER + "/list?ts=" + Date.now());
-    const nuevas = await r.json();
-    if(!Array.isArray(nuevas)) return;
-
-    const existentes = new Set(fotos.map(f=>f.public_id));
-    const validas = [];
-
-    for(const f of nuevas){
-      if(!existentes.has(f.public_id) && await existeImagen(f.url)){
-        validas.push(f);
-      }
-    }
-
-    if(validas.length){
-      fotos = [...validas, ...fotos];
-      index = 0;
+    const data = await r.json();
+    if(Array.isArray(data)){
+      fotos = data;
     }
   }catch{}
 }
 
+/* ======================
+   MOSTRAR QR
+====================== */
 function mostrarQR(){
-  enQR = true;
   carousel.innerHTML = "";
   autor.style.display = "none";
   qr.classList.remove("chico");
@@ -135,6 +115,7 @@ function mostrarQR(){
   setTimeout(async ()=>{
     await cargarFotos();
     if(fotos.length){
+      index = 0;
       mostrarFoto();
     }else{
       mostrarQR();
@@ -142,13 +123,18 @@ function mostrarQR(){
   },10000);
 }
 
+/* ======================
+   MOSTRAR FOTO
+====================== */
 function mostrarFoto(){
-  if(!fotos.length) return mostrarQR();
+  if(!fotos.length){
+    return mostrarQR();
+  }
 
-  enQR = false;
   qr.classList.add("chico");
 
   const f = fotos[index];
+
   const img = document.createElement("img");
   img.src = f.url;
   img.className = "slide";
@@ -163,8 +149,6 @@ function mostrarFoto(){
   const p = f.public_id.split("___");
   nombre.textContent = p[1]?.replace(/_/g," ") || "";
   mensaje.textContent = p[2]?.replace(/_/g," ") || "";
-
-  nombre.style.color = colores[Math.floor(Math.random()*colores.length)];
   autor.style.display = "block";
 
   index++;
@@ -176,11 +160,9 @@ function mostrarFoto(){
   }
 }
 
-/* loop silencioso */
-setInterval(()=>{
-  if(enQR) cargarFotos();
-},2000);
-
+/* ======================
+   ARRANQUE ÚNICO
+====================== */
 mostrarQR();
 </script>
 
