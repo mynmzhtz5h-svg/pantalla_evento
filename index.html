@@ -61,10 +61,7 @@ html,body{
   margin-bottom:10px;
   text-shadow:0 4px 12px rgba(0,0,0,.8);
 }
-#mensaje{
-  font-size:22px;
-  font-weight:500;
-}
+#mensaje{font-size:22px}
 </style>
 </head>
 
@@ -95,56 +92,61 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let fotosPrevias = [];
 let index = 0;
-let estado = "qr"; // qr | carrusel
-let timer = null;
 
 const colores = ["#00eaff","#ff4ecd","#ffe600","#7cff00","#ff7b00"];
 
+/* ✅ verifica si la imagen existe realmente */
+async function existeImagen(url){
+  try{
+    const r = await fetch(url, { method:"HEAD", cache:"no-store" });
+    return r.ok;
+  }catch{
+    return false;
+  }
+}
+
+/* 🔄 carga y filtra fotos */
 async function cargar(){
   try{
     const r = await fetch(WORKER + "/list?ts=" + Date.now());
     const j = await r.json();
-    if(Array.isArray(j)) fotos = j;
+    if(!Array.isArray(j)) return;
+
+    const validas = [];
+    for(const f of j){
+      if(await existeImagen(f.url)){
+        validas.push(f);
+      }
+    }
+    fotos = validas;
   }catch{}
 }
 
-function hayFotosNuevas(){
-  return fotos.length && (
-    !fotosPrevias.length ||
-    fotos[fotos.length-1].public_id !== fotosPrevias[fotosPrevias.length-1]?.public_id
-  );
-}
-
 function mostrarQR(){
-  estado = "qr";
   carousel.innerHTML = "";
   autor.style.display = "none";
   qr.classList.remove("chico");
 
-  timer = setTimeout(async ()=>{
+  setTimeout(async ()=>{
     await cargar();
-    if(hayFotosNuevas()){
+    if(fotos.length){
       fotosPrevias = [...fotos];
-      index = fotos.length - 1; // empezar por la nueva
-      iniciarCarrusel();
+      index = fotos.length - 1; // empieza por la nueva
+      mostrarFoto();
     }else if(fotosPrevias.length){
       fotos = [...fotosPrevias];
       index = 0;
-      iniciarCarrusel();
+      mostrarFoto();
     }else{
       mostrarQR();
     }
   },10000);
 }
 
-function iniciarCarrusel(){
-  estado = "carrusel";
-  qr.classList.add("chico");
-  mostrarFoto();
-}
-
 function mostrarFoto(){
   if(!fotos.length) return mostrarQR();
+
+  qr.classList.add("chico");
 
   const f = fotos[index];
   const img = document.createElement("img");
@@ -162,23 +164,19 @@ function mostrarFoto(){
   nombre.textContent = p[1]?.replace(/_/g," ") || "";
   mensaje.textContent = p[2]?.replace(/_/g," ") || "";
 
-  const color = colores[Math.floor(Math.random()*colores.length)];
-  nombre.style.color = color;
+  nombre.style.color = colores[Math.floor(Math.random()*colores.length)];
   mensaje.style.color = "#fff";
-
   autor.style.display = "block";
 
   index++;
 
   if(index >= fotos.length){
-    fotosPrevias = [...fotos];
     setTimeout(mostrarQR, 10000);
   }else{
     setTimeout(mostrarFoto, 10000);
   }
 }
 
-// inicio
 mostrarQR();
 </script>
 
