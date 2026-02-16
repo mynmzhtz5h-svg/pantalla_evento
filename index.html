@@ -46,22 +46,58 @@
   #qr img{width:60%;border-radius:20px; background: white; padding: 10px;}
   #qr div{margin-top:12px;color:#fff;font-size:20px;font-weight:600; text-shadow: 2px 2px 4px #000;}
 
-  #autor{
-    position:absolute;
-    left:20%;
-    bottom:50%; /* Movido abajo para mejor visibilidad */
-    display:none;
-    max-width:40%;
-    color: white;
-    z-index: 30;
-    text-shadow: 2px 2px 4px #000;
+ #autor {
+  position: absolute;
+  left: 20%;
+  bottom: 50%;
+  display: none;
+  max-width: 40%;
+  z-index: 30;
+  
+  /* --- NUEVO EFECTO NEÓN --- */
+  color: #fff;
+  /* La animación 'neon-fuga' maneja el brillo, 'cambio-color' el tono */
+  animation: neon-fuga 1.5s infinite alternate, cambio-color 6s infinite linear;
+}
+
+#autor span {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  /* Un pequeño borde sutil para que el texto no se pierda si el fondo es muy claro */
+  -webkit-text-stroke: 0.5px rgba(255,255,255,0.3);
+}
+
+#mensaje {
+  font-size: 22px;
+  font-style: italic;
+  opacity: 0.9; /* Un poco más suave que el nombre principal */
+}
+
+/* --- ANIMACIONES --- */
+
+/* 1. La pulsación: el brillo se expande y se contrae */
+@keyframes neon-fuga {
+  from {
+    text-shadow: 
+      0 0 4px #fff,
+      0 0 10px currentColor,
+      0 0 18px currentColor;
   }
-  #autor span{
-    display:block;
-    font-size:28px;
-    font-weight:700;
+  to {
+    text-shadow: 
+      0 0 2px #fff,
+      0 0 6px currentColor,
+      0 0 12px currentColor,
+      0 0 25px currentColor;
   }
-  #mensaje{font-size:22px; font-style: italic;}
+}
+
+/* 2. El cambio de color: recorre el espectro usando hue-rotate */
+@keyframes cambio-color {
+  0%   { color: #00f2ff; filter: hue-rotate(0deg); }
+  100% { color: #00f2ff; filter: hue-rotate(360deg); }
+}
 </style>
 </head>
 <body>
