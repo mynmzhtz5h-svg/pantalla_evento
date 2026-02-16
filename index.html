@@ -99,8 +99,8 @@ html,body{
 </div>
 
 <script>
-const TAG = "evento"; // el tag que usás al subir
 const CLOUD = "craneosuy";
+const TAG = "evento";
 
 const carousel = document.getElementById("carousel");
 const qr = document.getElementById("qr");
@@ -111,27 +111,29 @@ const mensaje = document.getElementById("mensaje");
 let fotos = [];
 let index = 0;
 
+/* 🔥 ESTE CALLBACK ES OBLIGATORIO */
 function cloudinaryCallback(data){
   fotos = data.resources || [];
 }
 
+/* carga JSONP correctamente */
 function cargarFotos(){
   const s = document.createElement("script");
-  s.src = `https://res.cloudinary.com/${CLOUD}/image/list/${TAG}.json?cb=${Date.now()}`;
+  s.src = `https://res.cloudinary.com/${CLOUD}/image/list/${TAG}.json?callback=cloudinaryCallback&_=${Date.now()}`;
   document.body.appendChild(s);
   s.onload = () => s.remove();
 }
 
 function mostrar(){
   if(!fotos.length){
-    carousel.innerHTML = "";
-    autor.style.display = "none";
+    carousel.innerHTML="";
+    autor.style.display="none";
     qr.classList.remove("chico");
     return;
   }
 
   qr.classList.add("chico");
-  carousel.innerHTML = "";
+  carousel.innerHTML="";
 
   const f = fotos[index];
   const img = document.createElement("img");
@@ -142,20 +144,21 @@ function mostrar(){
   const partes = f.public_id.split("___");
   nombre.textContent = partes[1]?.replace(/_/g," ") || "";
   mensaje.textContent = partes[2]?.replace(/_/g," ") || "";
-  autor.style.display = "block";
+  autor.style.display="block";
 
   index = (index + 1) % fotos.length;
 }
 
-// refresca lista constantemente (foto nueva entra sola)
+/* foto nueva entra sola */
 setInterval(cargarFotos, 2000);
 
-// carrusel
+/* carrusel */
 setInterval(mostrar, 4000);
 
-// inicio
+/* inicio */
 cargarFotos();
 setTimeout(mostrar, 1500);
 </script>
+
 </body>
 </html>
