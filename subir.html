@@ -33,6 +33,16 @@ button{
   background:#00c2ff;
   font-weight:700;
 }
+progress{
+  width:100%;
+  height:20px;
+}
+#ok{
+  display:none;
+  text-align:center;
+  font-size:20px;
+  margin-top:20px;
+}
 </style>
 </head>
 
@@ -42,15 +52,17 @@ button{
   <input id="nombre" placeholder="Tu nombre" required>
   <input id="mensaje" placeholder="Mensaje (opcional)">
   <input id="foto" type="file" accept="image/*" required>
+  <progress id="bar" value="0" max="100"></progress>
   <button>Subir foto 📸</button>
+  <div id="ok">✅ ¡Listo! Ahora mirá la pantalla 👀</div>
 </form>
 
 <script>
 const CLOUD = "craneosuy";
 const PRESET = "evento_unsigned";
-const WORKER = "https://evento-foto.pablo.workers.dev";
+const WORKER = "https://evento-foto.pablocerrutti.workers.dev";
 
-f.onsubmit = async e => {
+f.onsubmit = e => {
   e.preventDefault();
 
   const n = nombre.value.trim().replace(/\s+/g,"_");
@@ -61,24 +73,33 @@ f.onsubmit = async e => {
   fd.append("upload_preset", PRESET);
   fd.append("public_id", `evento___${n}___${m}`);
 
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{
-    method:"POST",
-    body:fd
-  });
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`);
 
-  const data = await r.json();
+  xhr.upload.onprogress = ev => {
+    if(ev.lengthComputable){
+      bar.value = (ev.loaded / ev.total) * 100;
+    }
+  };
 
-  await fetch(WORKER + "/add", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      url: data.secure_url,
-      public_id: data.public_id
-    })
-  });
+  xhr.onload = async () => {
+    const data = JSON.parse(xhr.responseText);
 
-  alert("Foto enviada 🙌");
-  f.reset();
+    await fetch(WORKER + "/add", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        url: data.secure_url,
+        public_id: data.public_id
+      })
+    });
+
+    bar.value = 100;
+    ok.style.display = "block";
+    f.reset();
+  };
+
+  xhr.send(fd);
 };
 </script>
 
