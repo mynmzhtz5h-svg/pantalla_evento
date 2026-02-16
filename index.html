@@ -8,68 +8,154 @@
 <style>
 html,body{
   margin:0;height:100%;
-  background:#000;
+  background:radial-gradient(circle,#222,#000);
   font-family:system-ui;
   overflow:hidden;
 }
+
+#branding{
+  position:absolute;top:20px;left:50%;
+  transform:translateX(-50%);
+  z-index:10
+}
+#branding img{width:200px}
+
 #carousel{
-  width:100%;
-  height:100%;
+  position:absolute;
+  top:160px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  height:65vh;
   display:flex;
   justify-content:center;
   align-items:center;
 }
-img{
-  max-width:95%;
-  max-height:95%;
+
+.slide{
+  position:absolute;
+  max-width:100%;
+  max-height:100%;
+  opacity:0;
+  transition:opacity 1s;
   border-radius:20px;
   box-shadow:0 20px 60px rgba(0,0,0,.6);
 }
+.slide.activa{opacity:1}
+
+#qr{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  transition:all .6s;
+}
+
+#qr.chico{
+  left:auto;
+  right:30px;
+  top:50%;
+  transform:translateY(-50%);
+  width:140px;
+}
+
+#qr img{width:60%;border-radius:20px}
+
+#qr div{
+  margin-top:12px;
+  color:#fff;
+  font-size:20px;
+  font-weight:600;
+}
+
 #autor{
   position:absolute;
-  bottom:30px;
+  bottom:40px;
   left:30px;
   color:#fff;
+  display:none;
 }
+#autor span{display:block;font-size:20px}
 </style>
 </head>
 
 <body>
 
+<div id="branding">
+  <img src="logo.png">
+</div>
+
 <div id="carousel"></div>
+
+<div id="qr">
+  <img src="qr.png">
+  <div>Escaneá y subí tu foto 📸</div>
+</div>
+
 <div id="autor">
-  <div id="nombre"></div>
-  <div id="mensaje"></div>
+  <span id="nombre"></span>
+  <span id="mensaje"></span>
 </div>
 
 <script>
-const WORKER = "https://evento-foto.pablo.workers.dev";
+/* 🔧 CONFIG */
+const WORKER = "https://evento-fotos.TUUSUARIO.workers.dev";
+
+/* DOM */
+const carousel = document.getElementById("carousel");
+const qr = document.getElementById("qr");
+const autor = document.getElementById("autor");
+const nombre = document.getElementById("nombre");
+const mensaje = document.getElementById("mensaje");
 
 let fotos = [];
-let i = 0;
+let index = 0;
 
-async function cargar(){
-  const r = await fetch(WORKER + "/list?ts=" + Date.now());
-  fotos = await r.json();
+/* 🔄 Cargar fotos desde Cloudflare */
+async function cargarFotos(){
+  try{
+    const r = await fetch(`${WORKER}/list`);
+    const data = await r.json();
+    fotos = data || [];
+  }catch(e){}
 }
 
+/* ▶ Mostrar carrusel */
 function mostrar(){
-  if(!fotos.length) return;
+  if(!fotos.length){
+    carousel.innerHTML = "";
+    autor.style.display = "none";
+    qr.classList.remove("chico");
+    return;
+  }
 
-  const f = fotos[i];
-  carousel.innerHTML = `<img src="${f.url}">`;
+  qr.classList.add("chico");
+  carousel.innerHTML = "";
 
-  const p = f.public_id.split("___");
-  nombre.textContent = p[1]?.replace(/_/g," ") || "";
-  mensaje.textContent = p[2]?.replace(/_/g," ") || "";
+  const f = fotos[index];
+  const img = document.createElement("img");
+  img.src = f.url;
+  img.className = "slide activa";
+  carousel.appendChild(img);
 
-  i = (i + 1) % fotos.length;
+  const partes = f.public_id.split("___");
+  nombre.textContent = partes[1]?.replace(/_/g," ") || "";
+  mensaje.textContent = partes[2]?.replace(/_/g," ") || "";
+  autor.style.display = "block";
+
+  index = (index + 1) % fotos.length;
 }
 
-setInterval(cargar, 2000);
-setInterval(mostrar, 4000);
+/* 🔁 LOOP EVENTO */
+setInterval(cargarFotos, 1500);   // entra foto nueva casi instantáneo
+setInterval(mostrar, 4000);       // carrusel fluido
 
-cargar().then(mostrar);
+/* 🚀 START */
+(async ()=>{
+  await cargarFotos();
+  mostrar();
+})();
 </script>
 
 </body>
