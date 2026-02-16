@@ -16,7 +16,6 @@ body{
   color:#fff;
   font-family:system-ui;
 }
-
 form{
   width:90%;
   max-width:420px;
@@ -24,14 +23,12 @@ form{
   flex-direction:column;
   gap:14px;
 }
-
 input,button{
   padding:14px;
   font-size:18px;
   border-radius:10px;
   border:none;
 }
-
 button{
   background:#00c2ff;
   font-weight:700;
@@ -45,15 +42,15 @@ button{
   <input id="nombre" placeholder="Tu nombre" required>
   <input id="mensaje" placeholder="Mensaje (opcional)">
   <input id="foto" type="file" accept="image/*" required>
-  <button type="submit">Subir foto 📸</button>
+  <button>Subir foto 📸</button>
 </form>
 
 <script>
 const CLOUD = "craneosuy";
 const PRESET = "evento_unsigned";
-const WORKER = "https://evento-fotos.pablocerrutti.workers.dev";
+const WORKER = "https://evento-foto.pablo.workers.dev";
 
-document.getElementById("f").onsubmit = async e =>{
+f.onsubmit = async e => {
   e.preventDefault();
 
   const n = nombre.value.trim().replace(/\s+/g,"_");
@@ -71,8 +68,7 @@ document.getElementById("f").onsubmit = async e =>{
 
   const data = await r.json();
 
-  // 🔥 avisamos al Worker
-  await fetch(`${WORKER}/add`,{
+  await fetch(WORKER + "/add", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
