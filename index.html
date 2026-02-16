@@ -55,9 +55,6 @@ html,body{
   color:#fff;
   display:none;
 }
-#autor span{
-  display:block;
-}
 #nombre{
   font-size:26px;
   font-weight:700;
@@ -65,7 +62,6 @@ html,body{
 }
 #mensaje{
   font-size:22px;
-  font-weight:400;
 }
 </style>
 </head>
@@ -99,34 +95,40 @@ let index = 0;
 let mostrando = false;
 
 /* ======================
-   CARGAR FOTOS (sin duplicar)
+   CARGAR FOTOS (FUENTE ÚNICA DE VERDAD)
 ====================== */
 async function cargarFotos(){
   try{
     const r = await fetch(WORKER + "/list?ts=" + Date.now());
     const data = await r.json();
-    if(!Array.isArray(data)) return;
 
-    const existentes = new Set(fotos.map(f => f.public_id));
-    const nuevas = data.filter(f => !existentes.has(f.public_id));
-
-    if(nuevas.length){
-      fotos = [...nuevas, ...fotos];
+    if(!Array.isArray(data)){
+      fotos = [];
+      return;
     }
-  }catch(e){}
+
+    fotos = data;       // 🔥 REEMPLAZA TODO
+    if(index >= fotos.length){
+      index = 0;
+    }
+
+  }catch(e){
+    fotos = [];
+  }
 }
 
 /* ======================
    MOSTRAR QR
 ====================== */
-function mostrarQR(){
+async function mostrarQR(){
   mostrando = false;
   carousel.innerHTML = "";
   autor.style.display = "none";
   qr.classList.remove("chico");
 
-  setTimeout(async ()=>{
-    await cargarFotos();
+  await cargarFotos();
+
+  setTimeout(()=>{
     if(fotos.length){
       index = 0;
       mostrarFoto();
@@ -176,13 +178,13 @@ function mostrarFoto(){
 }
 
 /* ======================
-   REFRESCO SILENCIOSO
+   REFRESCO CONSTANTE
 ====================== */
 setInterval(()=>{
   if(!mostrando){
     cargarFotos();
   }
-}, 7000);
+}, 6000);
 
 /* ======================
    ARRANQUE
