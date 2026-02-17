@@ -46,7 +46,7 @@
   #qr img{width:60%;border-radius:20px; background: white; padding: 10px;}
   #qr div{margin-top:12px;color:#fff;font-size:20px;font-weight:600; text-shadow: 2px 2px 4px #000;}
 
- #autor {
+#autor {
   position: absolute;
   left: 20%;
   bottom: 50%;
@@ -54,49 +54,51 @@
   max-width: 40%;
   z-index: 30;
   
-  /* --- NUEVO EFECTO NEÓN --- */
-  color: #fff;
-  /* La animación 'neon-fuga' maneja el brillo, 'cambio-color' el tono */
-  animation: neon-fuga 1.5s infinite alternate, cambio-color 6s infinite linear;
+  /* Texto siempre blanco */
+  color: white; 
+  
+  /* Animación: pulso de brillo y rotación de color RGB */
+  animation: pulso-neon 1.5s infinite alternate, rotacion-rgb 6s infinite linear;
 }
 
 #autor span {
   display: block;
   font-size: 28px;
   font-weight: 700;
-  /* Un pequeño borde sutil para que el texto no se pierda si el fondo es muy claro */
-  -webkit-text-stroke: 0.5px rgba(255,255,255,0.3);
 }
 
 #mensaje {
-  font-size: 22px;
+  font-size: 22px; 
   font-style: italic;
-  opacity: 0.9; /* Un poco más suave que el nombre principal */
 }
 
-/* --- ANIMACIONES --- */
+/* --- EFECTOS --- */
 
-/* 1. La pulsación: el brillo se expande y se contrae */
-@keyframes neon-fuga {
+/* 1. Definimos el cambio de color solo para la sombra */
+@keyframes rotacion-rgb {
+  0%   { --color-neon: #ff0000; } /* Rojo */
+  20%  { --color-neon: #ff00ff; } /* Magenta */
+  40%  { --color-neon: #0000ff; } /* Azul */
+  60%  { --color-neon: #00ffff; } /* Cian */
+  80%  { --color-neon: #00ff00; } /* Verde */
+  100% { --color-neon: #ffff00; } /* Amarillo */
+}
+
+/* 2. El pulso que expande el resplandor */
+@keyframes pulso-neon {
   from {
     text-shadow: 
-      0 0 4px #fff,
-      0 0 10px currentColor,
-      0 0 18px currentColor;
+      0 0 5px #fff,
+      0 0 10px var(--color-neon),
+      0 0 20px var(--color-neon);
   }
   to {
     text-shadow: 
       0 0 2px #fff,
-      0 0 6px currentColor,
-      0 0 12px currentColor,
-      0 0 25px currentColor;
+      0 0 15px var(--color-neon),
+      0 0 30px var(--color-neon),
+      0 0 45px var(--color-neon);
   }
-}
-
-/* 2. El cambio de color: recorre el espectro usando hue-rotate */
-@keyframes cambio-color {
-  0%   { color: #00f2ff; filter: hue-rotate(0deg); }
-  100% { color: #00f2ff; filter: hue-rotate(360deg); }
 }
 </style>
 </head>
